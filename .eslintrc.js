@@ -19,5 +19,10 @@ module.exports = {
             version: 'detect',
         },
     },
-    rules: {},
+    rules: {
+        'react/react-in-jsx-scope': 'off',
+        '@typescript-eslint/no-var-requires': 'error',
+        '@typescript-eslint/no-explicit-any': 'error',
+    },
+    ignorePatterns: ['env.d.ts'],
 };
