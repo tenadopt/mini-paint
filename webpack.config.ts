@@ -8,13 +8,22 @@ interface Configuration extends WebpackConfiguration {
 }
 
 const config: Configuration = {
-    entry: './src/index.tsx',
+    mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+    entry: './src/app/index.tsx',
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'bundle.js',
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js'],
+        alias: {
+            'app': path.resolve(__dirname, 'src/app'),
+            'entities': path.resolve(__dirname, 'src/entities'),
+            'features': path.resolve(__dirname, 'src/features'),
+            'shared': path.resolve(__dirname, 'src/shared'),
+            'pages': path.resolve(__dirname, 'src/pages'),
+            'widgets': path.resolve(__dirname, 'src/widgets'),
+        },
     },
     module: {
         rules: [
@@ -41,6 +50,7 @@ const config: Configuration = {
         compress: true,
         port: 3000,
         historyApiFallback: true,
+        open: true,
     },
 };
 

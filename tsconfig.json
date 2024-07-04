@@ -8,7 +8,16 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": "src",
+    "paths": {
+      "app/*": ["app/*"],
+      "features/*": ["features/*"],
+      "entities/*": ["entities/*"],
+      "shared/*": ["shared/*"],
+      "pages/*": ["pages/*"],
+      "widgets/*": ["widgets/*"]
+    }
   },
   "include": ["src", "webpack.config.ts", ".eslintrc.js", "prettier.config.js"]
 }
