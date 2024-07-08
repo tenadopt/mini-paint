@@ -1,12 +1,10 @@
 import React from 'react';
-import ImageEditor from 'features/imageEditor/ui/ImageEditor';
-import ToolBar from 'features/imageEditor/ui/ToolBar';
+import CanvasEditor from 'features/imageEditor/ui/CanvasEditor';
 
 const ImageEditorPage = () => (
     <div>
         <h1>Image Editor</h1>
-        <ToolBar />
-        <ImageEditor />
+        <CanvasEditor />
     </div>
 );
 

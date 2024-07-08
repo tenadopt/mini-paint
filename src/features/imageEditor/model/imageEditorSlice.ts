@@ -37,7 +37,6 @@ const imageEditorSlice = createSlice({
     },
 });
 
-// Custom action creators to handle multiple arguments
 export const setBrushSizeWithState = createAction<SetBrushSizePayload>('imageEditor/setBrushSizeWithState');
 export const setColorWithState = createAction<SetColorPayload>('imageEditor/setColorWithState');
 
