@@ -1,6 +1,6 @@
 import React from 'react';
-import { AppBar, Toolbar, Button, Box } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import {AppBar, Toolbar, Button, Box} from '@mui/material';
+import {useNavigate} from 'react-router-dom';
 
 const Header = () => {
     const navigate = useNavigate();

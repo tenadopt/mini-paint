@@ -211,7 +211,6 @@ const CanvasEditor: React.FC = () => {
                     onMouseLeave={finishDrawing}
                     style={{ border: '1px solid #000' }}
                 />
-
             </Box>
         </Container>
     );
