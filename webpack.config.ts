@@ -2,6 +2,7 @@ import * as path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { Configuration as WebpackConfiguration } from 'webpack';
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
+import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 interface Configuration extends WebpackConfiguration {
     devServer?: WebpackDevServerConfiguration;
@@ -16,14 +17,11 @@ const config: Configuration = {
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js'],
-        alias: {
-            'app': path.resolve(__dirname, 'src/app'),
-            'entities': path.resolve(__dirname, 'src/entities'),
-            'features': path.resolve(__dirname, 'src/features'),
-            'shared': path.resolve(__dirname, 'src/shared'),
-            'pages': path.resolve(__dirname, 'src/pages'),
-            'widgets': path.resolve(__dirname, 'src/widgets'),
-        },
+        plugins: [
+            new TsconfigPathsPlugin({
+                configFile: path.resolve(__dirname, 'tsconfig.json')
+            })
+        ],
     },
     module: {
         rules: [

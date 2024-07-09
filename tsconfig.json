@@ -19,5 +19,6 @@
       "widgets/*": ["widgets/*"]
     }
   },
-  "include": ["src", "webpack.config.ts", ".eslintrc.js", "prettier.config.js"]
+  "include": ["src", "webpack.config.ts", ".eslintrc.js", "prettier.config.js"],
+  "exclude": ["node_modules"]
 }
