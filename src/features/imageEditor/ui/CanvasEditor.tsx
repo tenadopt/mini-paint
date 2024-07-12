@@ -17,9 +17,6 @@ const CanvasEditor: React.FC = () => {
     const [shape, setShape] = useState<ShapeType>('line');
     const [startPosition, setStartPosition] = useState<{ x: number; y: number } | null>(null);
 
-    const [brushSize, setBrushSizeState] = useState<number>(settings.brushSize);
-    const [color, setColorState] = useState<string>(settings.color);
-
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -31,10 +28,10 @@ const CanvasEditor: React.FC = () => {
         const context = canvas.getContext('2d');
         if (!context) return;
         context.lineCap = 'round';
-        context.strokeStyle = color;
-        context.lineWidth = brushSize;
+        context.strokeStyle = settings.color;
+        context.lineWidth = settings.brushSize;
         contextRef.current = context;
-    }, [brushSize, color]);
+    }, [settings.brushSize, settings.color]);
 
     const startDrawing = (event: React.MouseEvent<HTMLCanvasElement>) => {
         const { offsetX, offsetY } = event.nativeEvent;
@@ -151,19 +148,25 @@ const CanvasEditor: React.FC = () => {
 
     const handleBrushSizeChange = (_: Event, newValue: number | number[]) => {
         if (typeof newValue === 'number') {
-            setBrushSizeState(newValue);
             dispatch(setBrushSizeWithState({ brushSize: newValue }));
         }
     };
 
     const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setColorState(event.target.value);
         dispatch(setColorWithState({ color: event.target.value }));
     };
 
     const handleShapeChange = (event: SelectChangeEvent<string>) => {
         setShape(event.target.value as ShapeType);
     };
+
+    useEffect(() => {
+        return () => {
+            // Cleanup function to reset the brush size and color when leaving the canvas
+            dispatch(setBrushSizeWithState({ brushSize: 1 })); // Reset to default brush size
+            dispatch(setColorWithState({ color: '#000000' })); // Reset to default color
+        };
+    }, [dispatch]);
 
     return (
         <Container>
@@ -184,14 +187,14 @@ const CanvasEditor: React.FC = () => {
                 </FormControl>
                 <TextField
                     type="color"
-                    value={color}
+                    value={settings.color}
                     onChange={handleColorChange}
                     label="Brush Color"
                     variant="outlined"
                     margin="normal"
                 />
                 <Slider
-                    value={brushSize}
+                    value={settings.brushSize}
                     onChange={(_, newValue) => handleBrushSizeChange(_, newValue)}
                     min={1}
                     max={50}
