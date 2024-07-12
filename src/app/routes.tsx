@@ -2,7 +2,9 @@ import React, {Suspense, lazy} from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import AppLayout from 'widgets/AppLayout';
 import ErrorBoundary from 'shared/model/ErrorBoundary';
+import {Box, CircularProgress} from "@mui/material";
 
+const HomePage = lazy(()=>import('pages/Home/ui/HomePage'));
 const SignInPage = lazy(()=>import('pages/SignIn/ui/SignInPage'));
 const SignUpPage = lazy(()=>import('pages/SignUp/ui/SignUpPage'));
 const ImageFeedPage = lazy(()=>import('pages/ImageFeed/ui/ImageFeedPage'));
@@ -15,36 +17,44 @@ const router = createBrowserRouter([
         errorElement: <ErrorBoundary />,
         children: [
             {
+                path: "",
+                element: (
+                    <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
+                        <HomePage />
+                    </Suspense>
+                ),
+            },
+            {
                 path: "signin",
                 element: (
-                    <Suspense fallback={<div>Loading...</div>}>
-                    <SignInPage />)
+                    <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
+                        <SignInPage />
                     </Suspense>
-                )
+                ),
             },
             {
                 path: "signup",
                 element: (
-                    <Suspense fallback={<div>Loading...</div>}>
-                        <SignUpPage />)
+                    <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
+                        <SignUpPage />
                     </Suspense>
-                )
+                ),
             },
             {
                 path: "feed",
                 element: (
-                    <Suspense fallback={<div>Loading...</div>}>
-                        <ImageFeedPage />)
+                    <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
+                        <ImageFeedPage />
                     </Suspense>
-                )
+                ),
             },
             {
                 path: "editor",
                 element: (
-                    <Suspense fallback={<div>Loading...</div>}>
-                        <ImageEditorPage />)
+                    <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
+                        <ImageEditorPage />
                     </Suspense>
-                )
+                ),
             }
         ]
     }

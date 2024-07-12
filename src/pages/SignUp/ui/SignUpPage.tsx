@@ -1,28 +1,34 @@
-import {z} from 'zod'
-import {SubmitHandler, useForm} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {Box, Button, Container, TextField, Typography} from "@mui/material";
-import React from "react";
-
+import React from 'react';
+import { z } from 'zod';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Box, Button, Container, TextField, Typography } from '@mui/material';
+import { signUp } from 'features/auth/model/authSlice';
+import useAppDispatch from 'shared/hooks/useAppDispatch';
+import useAppSelector from 'shared/hooks/useAppSelector';
 
 const signUpSchema = z.object({
-    email: z.string().email({message: "Invalid email address"}),
-    password: z.string().min(8, {message: "Password must be at least 8 characters"}),
-    confirmPassword: z.string().min(8, {message: "Password must be at least 8 characters"}),
+    email: z.string().email({ message: 'Invalid email address' }),
+    password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+    confirmPassword: z.string().min(8, { message: 'Password must be at least 8 characters' }),
 }).refine(data => data.password === data.confirmPassword, {
-    message: "Password do not match",
-    path: ["confirmPassword"],
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
 });
 
 type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 const SignUpPage = () => {
-    const {register, handleSubmit, formState: {errors}} = useForm<SignUpFormValues>({
-        resolver: zodResolver(signUpSchema)
-    })
+    const dispatch = useAppDispatch();
+    const { loading, error } = useAppSelector((state) => state.auth);
+
+    const { register, handleSubmit, formState: { errors } } = useForm<SignUpFormValues>({
+        resolver: zodResolver(signUpSchema),
+    });
 
     const onSubmit: SubmitHandler<SignUpFormValues> = (data) => {
-        console.log(data);
+        const { email, password } = data;
+        dispatch(signUp({ email, password }));
     };
 
     return (
@@ -35,7 +41,7 @@ const SignUpPage = () => {
                     fullWidth
                     label="Email"
                     margin="normal"
-                    {...register("email")}
+                    {...register('email')}
                     error={!!errors.email}
                     helperText={errors.email?.message}
                 />
@@ -44,7 +50,7 @@ const SignUpPage = () => {
                     label="Password"
                     type="password"
                     margin="normal"
-                    {...register("password")}
+                    {...register('password')}
                     error={!!errors.password}
                     helperText={errors.password?.message}
                 />
@@ -53,7 +59,7 @@ const SignUpPage = () => {
                     label="Confirm Password"
                     type="password"
                     margin="normal"
-                    {...register("confirmPassword")}
+                    {...register('confirmPassword')}
                     error={!!errors.confirmPassword}
                     helperText={errors.confirmPassword?.message}
                 />
@@ -62,9 +68,15 @@ const SignUpPage = () => {
                     variant="contained"
                     color="primary"
                     type="submit"
+                    disabled={loading}
                 >
-                    Sign Up
+                    {loading ? 'Signing Up...' : 'Sign Up'}
                 </Button>
+                {error && (
+                    <Typography color="error" variant="body2">
+                        {error}
+                    </Typography>
+                )}
             </Box>
         </Container>
     );

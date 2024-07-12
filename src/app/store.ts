@@ -1,8 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
 import imageEditorReducer from 'features/imageEditor/model/imageEditorSlice';
+import authReducer from 'features/auth/model/authSlice'
 
 const store = configureStore({
     reducer: {
+        auth: authReducer,
         imageEditor: imageEditorReducer,
     },
 });

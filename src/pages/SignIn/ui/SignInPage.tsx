@@ -1,23 +1,29 @@
 import React from 'react';
 import { z } from 'zod';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Button, Container, TextField, Typography } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from 'app/store';
+import { signIn } from 'features/auth/model/authSlice';
 
 const signInSchema = z.object({
-    email: z.string().email({ message: "Invalid email address" }),
-    password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+    email: z.string().email({ message: 'Invalid email address' }),
+    password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
 });
 
 type SignInFormValues = z.infer<typeof signInSchema>;
 
-const SignInPage: React.FC = () => {
+const SignInPage = () => {
+    const dispatch = useDispatch<AppDispatch>();
+    const { loading, error } = useSelector((state: RootState) => state.auth);
+
     const { register, handleSubmit, formState: { errors } } = useForm<SignInFormValues>({
         resolver: zodResolver(signInSchema),
     });
 
     const onSubmit: SubmitHandler<SignInFormValues> = (data) => {
-        console.log(data);
+        dispatch(signIn(data));
     };
 
     return (
@@ -30,7 +36,7 @@ const SignInPage: React.FC = () => {
                     fullWidth
                     label="Email"
                     margin="normal"
-                    {...register("email")}
+                    {...register('email')}
                     error={!!errors.email}
                     helperText={errors.email?.message}
                 />
@@ -39,7 +45,7 @@ const SignInPage: React.FC = () => {
                     label="Password"
                     type="password"
                     margin="normal"
-                    {...register("password")}
+                    {...register('password')}
                     error={!!errors.password}
                     helperText={errors.password?.message}
                 />
@@ -48,9 +54,15 @@ const SignInPage: React.FC = () => {
                     variant="contained"
                     color="primary"
                     type="submit"
+                    disabled={loading}
                 >
-                    Sign In
+                    {loading ? 'Signing In...' : 'Sign In'}
                 </Button>
+                {error && (
+                    <Typography color="error" variant="body2">
+                        {error}
+                    </Typography>
+                )}
             </Box>
         </Container>
     );
