@@ -3,9 +3,10 @@ import { z } from 'zod';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Button, Container, TextField, Typography } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from 'app/store';
 import { signIn } from 'features/auth/model/authSlice';
+import useAppDispatch from "shared/hooks/useAppDispatch";
+import useAppSelector from "shared/hooks/useAppSelector";
+
 
 const signInSchema = z.object({
     email: z.string().email({ message: 'Invalid email address' }),
@@ -14,16 +15,17 @@ const signInSchema = z.object({
 
 type SignInFormValues = z.infer<typeof signInSchema>;
 
-const SignInPage = () => {
-    const dispatch = useDispatch<AppDispatch>();
-    const { loading, error } = useSelector((state: RootState) => state.auth);
+const SignInPage: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const { loading, error } = useAppSelector((state) => state.auth);
 
     const { register, handleSubmit, formState: { errors } } = useForm<SignInFormValues>({
         resolver: zodResolver(signInSchema),
     });
 
     const onSubmit: SubmitHandler<SignInFormValues> = (data) => {
-        dispatch(signIn(data));
+        const { email, password } = data;
+        dispatch(signIn({ email, password }));
     };
 
     return (
@@ -39,6 +41,7 @@ const SignInPage = () => {
                     {...register('email')}
                     error={!!errors.email}
                     helperText={errors.email?.message}
+                    autoComplete="email"
                 />
                 <TextField
                     fullWidth
@@ -48,6 +51,7 @@ const SignInPage = () => {
                     {...register('password')}
                     error={!!errors.password}
                     helperText={errors.password?.message}
+                    autoComplete="current-password"
                 />
                 <Button
                     fullWidth

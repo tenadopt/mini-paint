@@ -27,7 +27,6 @@ interface AuthCredentials {
     password: string;
 }
 
-// Async thunk for user sign-in
 export const signIn = createAsyncThunk<AuthResponse, AuthCredentials>(
     'auth/signIn',
     async (credentials, thunkAPI) => {
@@ -44,7 +43,6 @@ export const signIn = createAsyncThunk<AuthResponse, AuthCredentials>(
     }
 );
 
-// Async thunk for user sign-up
 export const signUp = createAsyncThunk<AuthResponse, AuthCredentials>(
     'auth/signUp',
     async (credentials, thunkAPI) => {

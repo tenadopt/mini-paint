@@ -3,6 +3,10 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { Configuration as WebpackConfiguration } from 'webpack';
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import webpack from 'webpack';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 interface Configuration extends WebpackConfiguration {
     devServer?: WebpackDevServerConfiguration;
@@ -39,6 +43,9 @@ const config: Configuration = {
     plugins: [
         new HtmlWebpackPlugin({
             template: './public/index.html',
+        }),
+        new webpack.DefinePlugin({
+            'process.env': JSON.stringify(process.env),
         }),
     ],
     devServer: {

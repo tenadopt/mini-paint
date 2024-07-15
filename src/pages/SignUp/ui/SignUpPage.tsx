@@ -4,8 +4,8 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Button, Container, TextField, Typography } from '@mui/material';
 import { signUp } from 'features/auth/model/authSlice';
-import useAppDispatch from 'shared/hooks/useAppDispatch';
-import useAppSelector from 'shared/hooks/useAppSelector';
+import useAppDispatch from "shared/hooks/useAppDispatch";
+import useAppSelector from "shared/hooks/useAppSelector";
 
 const signUpSchema = z.object({
     email: z.string().email({ message: 'Invalid email address' }),
