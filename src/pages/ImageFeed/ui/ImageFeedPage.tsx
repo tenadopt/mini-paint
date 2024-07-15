@@ -1,11 +1,11 @@
 import React from 'react';
 
-const App = () => {
+const ImageFeedPage = () => {
     return (
         <div>
-            
+Page of picture
         </div>
     );
 };
 
-export default App;
+export default ImageFeedPage;
