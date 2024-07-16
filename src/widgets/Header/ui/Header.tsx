@@ -1,6 +1,8 @@
 import React from 'react';
 import {AppBar, Toolbar, Button, Box} from '@mui/material';
 import {useNavigate} from 'react-router-dom';
+import AuthStatus from "shared/ui/AuthStatus";
+import LogoutButton from "shared/ui/LogoutButton";
 
 const Header = () => {
     const navigate = useNavigate();
@@ -20,6 +22,8 @@ const Header = () => {
                     <Button color="inherit" onClick={() => navigate('/signup')}>
                         Sign Up
                     </Button>
+                    <AuthStatus/>
+                    <LogoutButton/>
                 </Box>
             </Toolbar>
         </AppBar>
