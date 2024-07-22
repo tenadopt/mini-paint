@@ -8,7 +8,11 @@ import { setBrushSizeWithState, setColorWithState } from 'features/imageEditor/m
 
 type ShapeType = 'line' | 'star' | 'polygon' | 'circle' | 'rectangle';
 
-const CanvasEditor: React.FC = () => {
+interface CanvasEditorProps {
+    imageUrl?: string;
+}
+
+const CanvasEditor: React.FC<CanvasEditorProps> = ({ imageUrl }) => {
     const dispatch = useDispatch();
     const settings = useSelector((state: RootState) => state.imageEditor.settings);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -20,9 +24,9 @@ const CanvasEditor: React.FC = () => {
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-        canvas.width = window.innerWidth * 0.8;
+        canvas.width = window.innerHeight * 0.8; // Ensure the canvas is square
         canvas.height = window.innerHeight * 0.8;
-        canvas.style.width = `${window.innerWidth * 0.8}px`;
+        canvas.style.width = `${window.innerHeight * 0.8}px`;
         canvas.style.height = `${window.innerHeight * 0.8}px`;
 
         const context = canvas.getContext('2d');
@@ -31,7 +35,16 @@ const CanvasEditor: React.FC = () => {
         context.strokeStyle = settings.color;
         context.lineWidth = settings.brushSize;
         contextRef.current = context;
-    }, [settings.brushSize, settings.color]);
+
+        // Load image if imageUrl is provided
+        if (imageUrl) {
+            const img = new Image();
+            img.src = imageUrl;
+            img.onload = () => {
+                context.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+        }
+    }, [settings.brushSize, settings.color, imageUrl]);
 
     const startDrawing = (event: React.MouseEvent<HTMLCanvasElement>) => {
         const { offsetX, offsetY } = event.nativeEvent;
@@ -162,7 +175,6 @@ const CanvasEditor: React.FC = () => {
 
     useEffect(() => {
         return () => {
-            // Cleanup function to reset the brush size and color when leaving the canvas
             dispatch(setBrushSizeWithState({ brushSize: 1 })); // Reset to default brush size
             dispatch(setColorWithState({ color: '#000000' })); // Reset to default color
         };
@@ -173,7 +185,7 @@ const CanvasEditor: React.FC = () => {
             <Box display="flex" mt={2}>
                 <FormControl variant="outlined" style={{ minWidth: 120 }}>
                     <InputLabel>Shape</InputLabel>
-                    <Select<ShapeType>
+                    <Select
                         value={shape}
                         onChange={handleShapeChange}
                         label="Shape"

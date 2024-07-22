@@ -1,26 +1,18 @@
-import React from "react";
-import {RootState} from "app/store";
-import {selectAuth} from "features/auth/model/authSlice";
-import {CircularProgress, Typography} from "@mui/material";
-import {useAppSelector} from "shared/hooks/hooks";
+import React from 'react';
+import { useAppSelector } from 'shared/hooks/hooks';
 
 const AuthStatus = () => {
-    const { userId, loading, error} = useAppSelector((state: RootState) => selectAuth(state));
+    const auth = useAppSelector((state) => state.auth);
 
-    if (loading) {
-        return <CircularProgress/>
-    }
-
-    if (error) {
-        return <Typography color="error">Error: {error}</Typography>;
+    if (!auth.userId) {
+        return null;
     }
 
     return (
-        <Typography variant="body1">
-            {userId ? `Logged in as: ${userId}` : 'Not logged in'}
-        </Typography>
-    )
-
-}
+        <div>
+            Logged in as {auth.userId}
+        </div>
+    );
+};
 
 export default AuthStatus;

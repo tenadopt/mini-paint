@@ -3,4 +3,7 @@ export interface Work {
     title: string;
     description: string;
     imageUrl: string;
+    userId: string;
+    createdAt: Date;
+    updatedAt?: Date;
 }
