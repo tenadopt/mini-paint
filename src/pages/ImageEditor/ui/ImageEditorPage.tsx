@@ -4,10 +4,13 @@ import { Box, Container, TextField, Button, Typography, CircularProgress } from 
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { addWork, fetchWorkById, updateWork } from 'features/works/api/worksServices';
+import { doc, getDoc, addDoc, updateDoc, collection, DocumentReference, CollectionReference } from 'firebase/firestore';
+import { db } from 'firebaseConfig';
 import { useAppSelector } from 'shared/hooks/hooks';
 import { selectAuth } from 'features/auth/model/authSlice';
 import CanvasEditor from 'features/imageEditor/ui/CanvasEditor';
+import firebase from "firebase/compat";
+import UpdateData = firebase.firestore.UpdateData;
 
 const workSchema = z.object({
     title: z.string().min(1, 'Title is required'),
@@ -17,8 +20,12 @@ const workSchema = z.object({
 
 type WorkFormValues = z.infer<typeof workSchema>;
 
-const ImageEditorPage = () => {
-    const { id } = useParams<{ id: string }>();
+interface Work extends WorkFormValues {
+    userId: string;
+}
+
+const ImageEditorPage: React.FC = () => {
+    const { workId } = useParams<{ workId: string }>();
     const navigate = useNavigate();
     const { userId } = useAppSelector(selectAuth);
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<WorkFormValues>({
@@ -31,47 +38,57 @@ const ImageEditorPage = () => {
 
     useEffect(() => {
         const loadWork = async () => {
-            if (id) {
-                setLoading(true); // Set loading to true when fetching data
+            if (workId) {
+                setLoading(true);
                 try {
-                    const work = await fetchWorkById(id);
-                    if (work && work.userId === userId) {
-                        setInitialData(work);
-                        setValue('title', work.title);
-                        setValue('description', work.description);
-                        setValue('imageUrl', work.imageUrl);
-                        setIsEditing(true);
+                    const docRef: DocumentReference<Work> = doc(db, 'works', workId) as DocumentReference<Work>;
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists()) {
+                        const work = docSnap.data() as Work;
+                        if (work.userId === userId) {
+                            const { title, description, imageUrl } = work;
+                            setInitialData({ title, description, imageUrl });
+                            setValue<'title'>('title', title);
+                            setValue<'description'>('description', description);
+                            setValue<'imageUrl'>('imageUrl', imageUrl);
+                            setIsEditing(true);
+                        } else {
+                            setError('Work not found or you do not have access');
+                        }
                     } else {
-                        setError('Work not found or you do not have access');
+                        setError('Work not found');
                     }
                 } catch (err) {
                     setError('Failed to load work');
                 } finally {
-                    setLoading(false); // Ensure loading is set to false after fetching
+                    setLoading(false);
                 }
             } else {
                 setLoading(false);
             }
         };
-        loadWork();
-    }, [id, userId, setValue]);
+        loadWork().catch(console.error);
+    }, [workId, userId, setValue]);
 
     const onSubmit: SubmitHandler<WorkFormValues> = async (data) => {
         if (!userId) return;
-        setLoading(true); // Set loading to true when saving data
+        setLoading(true);
         try {
-            if (isEditing && id) {
-                await updateWork(id, data);
+            if (isEditing && workId) {
+                const docRef: DocumentReference<Work> = doc(db, 'works', workId) as DocumentReference<Work>;
+                await updateDoc(docRef, data as UpdateData<Work>);
                 alert('Work updated successfully');
             } else {
-                await addWork({ ...data, userId });
+                const worksCollection: CollectionReference<Work> = collection(db, 'works') as CollectionReference<Work>;
+                await addDoc(worksCollection, { ...data, userId });
                 alert('Work added successfully');
             }
             navigate('/');
         } catch (err) {
             setError('Failed to save work');
         } finally {
-            setLoading(false); // Ensure loading is set to false after saving
+            setLoading(false);
         }
     };
 
