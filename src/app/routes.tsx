@@ -1,9 +1,9 @@
 import React, { Suspense, lazy, ReactNode } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } from 'react-router-dom';
 import ErrorBoundary from 'shared/model/ErrorBoundary';
-import { Box, CircularProgress } from "@mui/material";
+import { Box, CircularProgress } from '@mui/material';
 import { useAppSelector } from 'shared/hooks/hooks';
-import AppLayout from "widgets/AppLayout";
+import AppLayout from 'widgets/AppLayout';
 
 const HomePage = lazy(() => import('pages/Home/ui/HomePage'));
 const SignInPage = lazy(() => import('pages/SignIn/ui/SignInPage'));
@@ -47,12 +47,12 @@ const AuthenticatedLayout: React.FC = () => (
 
 const router = createBrowserRouter([
     {
-        path: "/",
+        path: '/',
         element: <PublicLayout />,
         errorElement: <ErrorBoundary />,
         children: [
             {
-                path: "",
+                path: '',
                 element: (
                     <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
                         <HomePage />
@@ -60,7 +60,7 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path: "signin",
+                path: 'signin',
                 element: (
                     <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
                         <SignInPage />
@@ -68,20 +68,20 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path: "signup",
+                path: 'signup',
                 element: (
                     <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
                         <SignUpPage />
                     </Suspense>
                 ),
             },
-        ]
+        ],
     },
     {
         element: <AuthenticatedLayout />,
         children: [
             {
-                path: "feed",
+                path: 'feed',
                 element: (
                     <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
                         <ImageFeedPage />
@@ -89,7 +89,7 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path: "editor",
+                path: 'editor',
                 element: (
                     <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
                         <ImageEditorPage />
@@ -97,18 +97,18 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path: "editor/:workId",
+                path: 'editor/:workId',
                 element: (
                     <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
                         <WorkPage />
                     </Suspense>
                 ),
-            }
-        ]
-    }
+            },
+        ],
+    },
 ]);
 
-const AppRoutes = () => (
+const AppRoutes: React.FC = () => (
     <RouterProvider router={router} />
 );
 

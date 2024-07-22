@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Box, Grid, Card, CardMedia, CardContent, Typography, CircularProgress, Button } from '@mui/material';
+import { Container, Box, Grid, Card, CardMedia, CardContent, Typography, CircularProgress, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { fetchUserWorks, deleteWork } from 'features/works/api/worksServices';
 import { useAppSelector } from 'shared/hooks/hooks';
@@ -9,6 +9,8 @@ const HomePage = () => {
     const [works, setWorks] = useState<Work[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
+    const [openDialog, setOpenDialog] = useState<boolean>(false);
     const userId = useAppSelector((state) => state.auth.userId);
     const navigate = useNavigate();
 
@@ -27,16 +29,31 @@ const HomePage = () => {
                 setLoading(false);
             }
         };
-        loadWorks();
+
+        // Call loadWorks and handle the promise
+        loadWorks().catch(console.error);
     }, [userId]);
 
-    const handleDelete = async (workId: string) => {
+    const handleDelete = async () => {
+        if (!selectedWorkId) return;
         try {
-            await deleteWork(workId);
-            setWorks(works.filter(work => work.id !== workId));
+            await deleteWork(selectedWorkId);
+            setWorks(works.filter(work => work.id !== selectedWorkId));
+            setOpenDialog(false);
         } catch (err) {
             setError('Failed to delete work');
+            setOpenDialog(false);
         }
+    };
+
+    const handleOpenDialog = (workId: string) => {
+        setSelectedWorkId(workId);
+        setOpenDialog(true);
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+        setSelectedWorkId(null);
     };
 
     return (
@@ -62,20 +79,24 @@ const HomePage = () => {
                 <Grid container spacing={2} mt={2}>
                     {works.map(work => (
                         <Grid item xs={12} sm={6} md={4} key={work.id}>
-                            <Card onClick={() => navigate(`/editor/${work.id}`)}>
+                            <Card>
                                 <CardMedia
                                     component="img"
                                     height="200"
                                     image={work.imageUrl}
                                     alt={work.title}
+                                    onClick={() => navigate(`/editor/${work.id}`)}
                                 />
                                 <CardContent>
                                     <Typography variant="h6">{work.title}</Typography>
                                     <Typography variant="body2">{work.description}</Typography>
-                                    <Button onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDelete(work.id);
-                                    }} color="secondary">
+                                    <Button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenDialog(work.id);
+                                        }}
+                                        color="secondary"
+                                    >
                                         Delete
                                     </Button>
                                 </CardContent>
@@ -84,6 +105,25 @@ const HomePage = () => {
                     ))}
                 </Grid>
             )}
+            <Dialog
+                open={openDialog}
+                onClose={handleCloseDialog}
+            >
+                <DialogTitle>Delete Work</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this work? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleDelete} color="secondary">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 };

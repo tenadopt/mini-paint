@@ -1,5 +1,3 @@
-// src/shared/ui/LogoutButton.tsx
-
 import React from 'react';
 import { Button } from '@mui/material';
 import { useAppDispatch } from 'shared/hooks/hooks';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Container, TextField, Button, Typography, CircularProgress } from '@mui/material';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import {useForm, SubmitHandler, FieldPath} from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { doc, getDoc, addDoc, updateDoc, collection, DocumentReference, CollectionReference } from 'firebase/firestore';
@@ -112,7 +112,7 @@ const ImageEditorPage: React.FC = () => {
                             label="Title"
                             fullWidth
                             margin="normal"
-                            {...register('title')}
+                            {...register('title' as FieldPath<WorkFormValues>)}
                             error={!!errors.title}
                             helperText={errors.title?.message}
                         />
@@ -120,7 +120,7 @@ const ImageEditorPage: React.FC = () => {
                             label="Description"
                             fullWidth
                             margin="normal"
-                            {...register('description')}
+                            {...register('description' as FieldPath<WorkFormValues>)}
                             error={!!errors.description}
                             helperText={errors.description?.message}
                         />
@@ -128,7 +128,7 @@ const ImageEditorPage: React.FC = () => {
                             label="Image URL"
                             fullWidth
                             margin="normal"
-                            {...register('imageUrl')}
+                            {...register('imageUrl'  as FieldPath<WorkFormValues>)}
                             error={!!errors.imageUrl}
                             helperText={errors.imageUrl?.message}
                         />
