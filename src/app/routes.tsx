@@ -1,9 +1,9 @@
 import React, { Suspense, lazy, ReactNode } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } from 'react-router-dom';
 import ErrorBoundary from 'shared/model/ErrorBoundary';
-import { Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress } from "@mui/material";
 import { useAppSelector } from 'shared/hooks/hooks';
-import AppLayout from 'widgets/AppLayout';
+import AppLayout from "widgets/AppLayout";
 
 const HomePage = lazy(() => import('pages/Home/ui/HomePage'));
 const SignInPage = lazy(() => import('pages/SignIn/ui/SignInPage'));
@@ -12,16 +12,12 @@ const ImageFeedPage = lazy(() => import('pages/ImageFeed/ui/ImageFeedPage'));
 const ImageEditorPage = lazy(() => import('pages/ImageEditor/ui/ImageEditorPage'));
 const WorkPage = lazy(() => import('pages/Work/ui/WorkPage'));
 
-interface RequireAuthProps {
-    children: ReactNode;
-}
-
-const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
+const RequireAuth: React.FC<{ children: ReactNode }> = ({ children }) => {
     const auth = useAppSelector((state) => state.auth);
     const location = useLocation();
 
     if (!auth.userId) {
-        return <Navigate to="/signin" state={{ from: location }} replace />;
+        return <Navigate to="/" state={{ from: location }} replace />;
     }
 
     return <>{children}</>;
@@ -29,10 +25,12 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
 
 const PublicLayout: React.FC = () => {
     const auth = useAppSelector((state) => state.auth);
-
-    return auth.userId ? <Navigate to="/feed" replace /> : (
+    if (auth.userId) return <Navigate to="/feed" replace />;
+    return (
         <AppLayout>
-            <Outlet />
+            <Suspense fallback={<LoadingFallback />}>
+                <Outlet />
+            </Suspense>
         </AppLayout>
     );
 };
@@ -40,72 +38,56 @@ const PublicLayout: React.FC = () => {
 const AuthenticatedLayout: React.FC = () => (
     <RequireAuth>
         <AppLayout>
-            <Outlet />
+            <Suspense fallback={<LoadingFallback />}>
+                <Outlet />
+            </Suspense>
         </AppLayout>
     </RequireAuth>
 );
 
+const LoadingFallback: React.FC = () => (
+    <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <CircularProgress />
+    </Box>
+);
+
 const router = createBrowserRouter([
     {
-        path: '/',
+        path: "/",
         element: <PublicLayout />,
         errorElement: <ErrorBoundary />,
         children: [
             {
-                path: '',
-                element: (
-                    <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
-                        <HomePage />
-                    </Suspense>
-                ),
+                path: "",
+                element: <HomePage />,
             },
             {
-                path: 'signin',
-                element: (
-                    <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
-                        <SignInPage />
-                    </Suspense>
-                ),
+                path: "signin",
+                element: <SignInPage />,
             },
             {
-                path: 'signup',
-                element: (
-                    <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
-                        <SignUpPage />
-                    </Suspense>
-                ),
+                path: "signup",
+                element: <SignUpPage />,
             },
-        ],
+        ]
     },
     {
         element: <AuthenticatedLayout />,
         children: [
             {
-                path: 'feed',
-                element: (
-                    <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
-                        <ImageFeedPage />
-                    </Suspense>
-                ),
+                path: "feed",
+                element: <ImageFeedPage />,
             },
             {
-                path: 'editor',
-                element: (
-                    <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
-                        <ImageEditorPage />
-                    </Suspense>
-                ),
+                path: "editor",
+                element: <ImageEditorPage />,
             },
             {
-                path: 'editor/:workId',
-                element: (
-                    <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100vh"><CircularProgress /></Box>}>
-                        <WorkPage />
-                    </Suspense>
-                ),
-            },
-        ],
-    },
+                path: "editor/:workId",
+                element: <WorkPage />,
+            }
+        ]
+    }
 ]);
 
 const AppRoutes: React.FC = () => (

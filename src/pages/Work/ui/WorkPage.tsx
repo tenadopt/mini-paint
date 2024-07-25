@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchWorkById, updateWork } from 'features/works/api/worksServices';
 import { Work } from 'features/works/types';
-import { Container, CircularProgress, Typography, Box, Button } from '@mui/material';
+import { Container, Typography, Box, Button } from '@mui/material';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import renderLoading from "shared/model/renderLoading";
+import RenderError from "shared/model/RenderError";
 
 const WorkPage = () => {
     const { workId } = useParams<{ workId: string }>();
@@ -21,46 +25,52 @@ const WorkPage = () => {
                     setWork(fetchedWork);
                 } else {
                     setError('Work not found');
+                    toast.error('Work not found');
                 }
             } catch (err) {
                 setError('Failed to load work');
+                toast.error('Failed to load work');
             } finally {
                 setLoading(false);
             }
         };
-        loadWork();
+        loadWork().catch(err => {
+            console.error('Unexpected error:', err);
+            toast.error('An unexpected error occurred');
+        });
     }, [workId]);
 
     const handleUpdate = async () => {
         if (!work || !workId) return;
-        const updatedData = { title: 'New Title' }; // Example of updated data
+        const updatedData = { title: 'New Title' };
         try {
             await updateWork(workId, updatedData);
             setWork({ ...work, ...updatedData });
-            alert('Work updated successfully');
+            toast.success('Work updated successfully');
         } catch (error) {
             console.error('Error updating work:', error);
-            alert('Failed to update work');
+            toast.error('Failed to update work');
         }
     };
 
-    return (
+    if (loading) {
+        return renderLoading();
+    }
+
+    if (error) {
+        return <RenderError error={error} />
+    }
+
+    if (work) return (
         <Container maxWidth="md">
-            {loading ? (
-                <Box display="flex" justifyContent="center" mt={2}>
-                    <CircularProgress />
-                </Box>
-            ) : error ? (
-                <Box display="flex" justifyContent="center" mt={2}>
-                    <Typography color="error">{error}</Typography>
-                </Box>
-            ) : work ? (
+            <ToastContainer />
+            {work && (
                 <Box>
                     <Typography variant="h4">{work.title}</Typography>
                     <Typography variant="body1">{work.description}</Typography>
                     <Button onClick={handleUpdate} color="primary">Update Work</Button>
                 </Box>
-            ) : null}
+            )}
         </Container>
     );
 };

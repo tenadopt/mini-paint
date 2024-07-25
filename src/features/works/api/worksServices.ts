@@ -16,26 +16,27 @@ export const fetchUserWorks = async (userId: string): Promise<Work[]> => {
 export const fetchWorkById = async (id: string): Promise<Work | null> => {
     const docRef = doc(db, 'works', id);
     const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        return { id: docSnap.id, ...(docSnap.data() as Omit<Work, 'id'>), createdAt: docSnap.data().createdAt.toDate() };
-    } else {
-        return null;
+    if (!docSnap.exists()) {
+        return null
     }
+
+        return { id: docSnap.id, ...(docSnap.data() as Omit<Work, 'id'>), createdAt: docSnap.data().createdAt.toDate() };
+
 };
 
-export const addWork = async (work: Omit<Work, 'id' | 'createdAt'>): Promise<void> => {
-    await addDoc(collection(db, 'works'), {
+export const addWork = (work: Omit<Work, 'id' | 'createdAt'>)=> {
+    addDoc(collection(db, 'works'), {
         ...work,
         createdAt: new Date()
     });
 };
 
-export const updateWork = async (id: string, updatedData: Partial<Omit<Work, 'id' | 'createdAt'>>): Promise<void> => {
+export const updateWork = (id: string, updatedData: Partial<Omit<Work, 'id' | 'createdAt'>>) => {
     const docRef = doc(db, 'works', id);
-    await setDoc(docRef, { ...updatedData, updatedAt: new Date() }, { merge: true });
+    setDoc(docRef, { ...updatedData, updatedAt: new Date() }, { merge: true });
 };
 
-export const deleteWork = async (id: string): Promise<void> => {
+export const deleteWork = (id: string)=> {
     const docRef = doc(db, 'works', id);
-    await deleteDoc(docRef);
+    deleteDoc(docRef);
 };

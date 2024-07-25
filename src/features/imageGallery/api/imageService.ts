@@ -17,6 +17,7 @@ export const fetchImages = async (userId?: string): Promise<Image[]> => {
         : query(imagesCollection, orderBy('createdAt', 'desc'));
 
     const querySnapshot = await getDocs(q);
+
     return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
