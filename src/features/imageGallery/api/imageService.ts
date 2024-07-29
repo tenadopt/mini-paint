@@ -18,9 +18,20 @@ export const fetchImages = async (userId?: string): Promise<Image[]> => {
 
     const querySnapshot = await getDocs(q);
 
-    return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt.toDate()
-    })) as Image[];
+//     return querySnapshot.docs.map<QuerySnapshot<Image>>(doc => ({
+//         id: doc.id,
+//         ...doc.data(),
+//         createdAt: doc.data().createdAt.toDate()
+//     }));
+// };
+
+return querySnapshot.docs.map<Image>(doc => ({
+    id: doc.id,
+    title: "",
+    description: "",
+    imageUrl: "",
+    userId: "",
+    createdAt: doc.data().createdAt.toDate(),
+    ...doc.data()
+}));
 };

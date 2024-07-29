@@ -24,7 +24,7 @@ const CanvasEditor: React.FC<CanvasEditorProps> = ({ imageUrl }) => {
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-        canvas.width = window.innerHeight * 0.8; // Ensure the canvas is square
+        canvas.width = window.innerHeight * 0.8;
         canvas.height = window.innerHeight * 0.8;
         canvas.style.width = `${window.innerHeight * 0.8}px`;
         canvas.style.height = `${window.innerHeight * 0.8}px`;
