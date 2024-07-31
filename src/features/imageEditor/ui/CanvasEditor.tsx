@@ -1,18 +1,24 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from 'app/store';
 import {
     Button, Slider, TextField, Container, Box, Select, MenuItem, InputLabel, FormControl, SelectChangeEvent,
 } from '@mui/material';
 import { setBrushSizeWithState, setColorWithState } from 'features/imageEditor/model/imageEditorSlice';
+import { useSaveImage } from 'features/imageGallery/api/useImageQueries';
 
 type ShapeType = 'line' | 'star' | 'polygon' | 'circle' | 'rectangle';
 
 interface CanvasEditorProps {
     imageUrl?: string;
+    onSave: (url: string) => void;
 }
 
-const CanvasEditor: React.FC<CanvasEditorProps> = ({ imageUrl }) => {
+export interface CanvasEditorHandle {
+    saveCanvas: () => void;
+}
+
+const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageUrl, onSave }, ref) => {
     const dispatch = useDispatch();
     const settings = useSelector((state: RootState) => state.imageEditor.settings);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -20,6 +26,11 @@ const CanvasEditor: React.FC<CanvasEditorProps> = ({ imageUrl }) => {
     const [isDrawing, setIsDrawing] = useState(false);
     const [shape, setShape] = useState<ShapeType>('line');
     const [startPosition, setStartPosition] = useState<{ x: number; y: number } | null>(null);
+    const saveImageMutation = useSaveImage();
+
+    useImperativeHandle(ref, () => ({
+        saveCanvas,
+    }));
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -36,7 +47,6 @@ const CanvasEditor: React.FC<CanvasEditorProps> = ({ imageUrl }) => {
         context.lineWidth = settings.brushSize;
         contextRef.current = context;
 
-        // Load image if imageUrl is provided
         if (imageUrl) {
             const img = new Image();
             img.src = imageUrl;
@@ -86,6 +96,18 @@ const CanvasEditor: React.FC<CanvasEditorProps> = ({ imageUrl }) => {
         const context = contextRef.current;
         if (canvas && context) {
             context.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    };
+
+    const saveCanvas = () => {
+        const canvas = canvasRef.current;
+        if (canvas) {
+            const dataUrl = canvas.toDataURL();
+            saveImageMutation.mutate(dataUrl, {
+                onSuccess: (url) => {
+                    onSave(url);
+                },
+            });
         }
     };
 
@@ -169,14 +191,14 @@ const CanvasEditor: React.FC<CanvasEditorProps> = ({ imageUrl }) => {
         dispatch(setColorWithState({ color: event.target.value }));
     };
 
-    const handleShapeChange = (event: SelectChangeEvent<string>) => {
+    const handleShapeChange = (event: SelectChangeEvent) => {
         setShape(event.target.value as ShapeType);
     };
 
     useEffect(() => {
         return () => {
-            dispatch(setBrushSizeWithState({ brushSize: 1 })); // Reset to default brush size
-            dispatch(setColorWithState({ color: '#000000' })); // Reset to default color
+            dispatch(setBrushSizeWithState({ brushSize: 1 }));
+            dispatch(setColorWithState({ color: '#000000' }));
         };
     }, [dispatch]);
 
@@ -229,6 +251,8 @@ const CanvasEditor: React.FC<CanvasEditorProps> = ({ imageUrl }) => {
             </Box>
         </Container>
     );
-};
+});
+
+CanvasEditor.displayName = "CanvasEditor";
 
 export default CanvasEditor;
