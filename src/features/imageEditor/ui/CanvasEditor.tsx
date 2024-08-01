@@ -15,6 +15,7 @@ interface CanvasEditorProps {
 }
 
 export interface CanvasEditorHandle {
+    getCanvasDataUrl: () => string;
     saveCanvas: () => void;
 }
 
@@ -29,6 +30,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
     const saveImageMutation = useSaveImage();
 
     useImperativeHandle(ref, () => ({
+        getCanvasDataUrl,
         saveCanvas,
     }));
 
@@ -55,6 +57,10 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
             };
         }
     }, [settings.brushSize, settings.color, imageUrl]);
+
+    const getCanvasDataUrl = () => {
+        return canvasRef.current?.toDataURL() || '';
+    };
 
     const startDrawing = (event: React.MouseEvent<HTMLCanvasElement>) => {
         const { offsetX, offsetY } = event.nativeEvent;
@@ -252,7 +258,5 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
         </Container>
     );
 });
-
-CanvasEditor.displayName = "CanvasEditor";
 
 export default CanvasEditor;

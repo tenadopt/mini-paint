@@ -11,6 +11,7 @@ import { selectAuth } from 'features/auth/model/authSlice';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CanvasEditor, { CanvasEditorHandle } from 'features/imageEditor/ui/CanvasEditor';
+import {getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 
 const workSchema = z.object({
     title: z.string().min(1, 'Title is required'),
@@ -34,7 +35,7 @@ const ImageEditorPage = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [imageUrl, setImageUrl] = useState<string>('');
-    const canvasEditorRef = useRef<CanvasEditorHandle>(null);
+    const canvasEditorRef = useRef<CanvasEditorHandle | null>(null);
 
     useEffect(() => {
         const loadWork = async () => {
@@ -83,19 +84,29 @@ const ImageEditorPage = () => {
     const onSubmit: SubmitHandler<WorkFormValues> = async (data) => {
         if (!userId) return;
         setLoading(true);
+        let newImageUrl = imageUrl;
         try {
-            // Save the canvas before saving form data
             if (canvasEditorRef.current) {
-                canvasEditorRef.current.saveCanvas();
+                const canvasDataUrl = canvasEditorRef.current.getCanvasDataUrl();
+                if (canvasDataUrl) {
+                    const response = await fetch(canvasDataUrl);
+                    const blob = await response.blob();
+                    const file = new File([blob], `canvas-image-${Date.now()}.png`, { type: 'image/png' });
+                    const storage = getStorage();
+                    const storageRef = ref(storage, `images/${file.name}`);
+                    await uploadBytes(storageRef, file);
+                    newImageUrl = await getDownloadURL(storageRef);
+                    setImageUrl(newImageUrl);
+                }
             }
 
             if (workId) {
                 const docRef: DocumentReference = doc(db, 'works', workId);
-                await updateDoc(docRef, data);
+                await updateDoc(docRef, { ...data, imageUrl: newImageUrl });
                 toast.success('Work updated successfully');
             } else {
                 const worksCollection = collection(db, 'works');
-                await addDoc(worksCollection, { ...data, userId });
+                await addDoc(worksCollection, { ...data, userId, imageUrl: newImageUrl });
                 toast.success('Work added successfully');
             }
             navigate('/');

@@ -78,6 +78,10 @@ const router = createBrowserRouter([
             {
                 path: "editor",
                 element: <ImageEditorPage />,
+            },
+            {
+                path: "editor/:workId",
+                element: <ImageEditorPage />,
             }
         ]
     }

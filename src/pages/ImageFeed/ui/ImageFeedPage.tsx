@@ -17,7 +17,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
 
-const ImageFeedPage: React.FC = () => {
+const ImageFeedPage = () => {
     const userId = useAppSelector(state => state.auth.userId);
     console.log('User ID:', userId);
     const { data: images = [], error, isLoading } = useFetchImages(userId || undefined);
@@ -33,6 +33,10 @@ const ImageFeedPage: React.FC = () => {
                 toast.error(`Failed to delete image: ${error.message}`);
             },
         });
+    };
+
+    const handleEdit = (id: string) => {
+        navigate(`/editor/${id}`);
     };
 
     if (isLoading) {
@@ -68,7 +72,7 @@ const ImageFeedPage: React.FC = () => {
                 <Grid container spacing={2} mt={2}>
                     {images.map((image) => (
                         <Grid item xs={12} sm={6} md={4} key={image.id}>
-                            <Card>
+                            <Card onClick={() => handleEdit(image.id)} style={{ cursor: 'pointer' }}>
                                 {image.imageUrl && (
                                     <CardMedia component="img" height="200" image={image.imageUrl} alt={image.title} />
                                 )}
@@ -77,7 +81,10 @@ const ImageFeedPage: React.FC = () => {
                                     <Typography variant="body2">{image.description}</Typography>
                                     <IconButton
                                         aria-label="delete"
-                                        onClick={() => handleDelete(image.id)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(image.id);
+                                        }}
                                     >
                                         <DeleteIcon />
                                     </IconButton>
