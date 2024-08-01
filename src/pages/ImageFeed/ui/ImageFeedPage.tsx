@@ -1,75 +1,103 @@
-import React, { useEffect, useState } from 'react';
-import { Container, Box, TextField, Grid, Card, CardMedia, CardContent, Typography} from '@mui/material';
-import { fetchImages } from 'features/imageGallery/api/imageService';
-import { Image } from 'features/imageGallery/api/imageService';
-import renderLoading from "shared/model/renderLoading";
-import RenderError from "shared/model/RenderError";
+import React from 'react';
+import { useAppSelector } from 'shared/hooks/hooks';
+import { useFetchImages, useDeleteImage } from 'features/imageGallery/api/useImageQueries';
+import {
+    Button,
+    CircularProgress,
+    Container,
+    Grid,
+    Card,
+    CardMedia,
+    CardContent,
+    Typography,
+    IconButton,
+    Box
+} from '@mui/material';
+import { ToastContainer, toast } from 'react-toastify';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useNavigate } from 'react-router-dom';
 
-const ImageFeed = () => {
-    const [images, setImages] = useState<Image[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [filterUserId, setFilterUserId] = useState<string>("");
+const ImageFeedPage = () => {
+    const userId = useAppSelector(state => state.auth.userId);
+    console.log('User ID:', userId);
+    const { data: images = [], error, isLoading } = useFetchImages(userId || undefined);
+    const deleteImageMutation = useDeleteImage();
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        const loadImages = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const images = await fetchImages(filterUserId);
-                setImages(images);
-            } catch (err) {
-                setError('Failed to load images');
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadImages();
-    }, [filterUserId]);
+    const handleDelete = (id: string) => {
+        deleteImageMutation.mutate(id, {
+            onSuccess: () => {
+                toast.success('Image deleted successfully');
+            },
+            onError: (error) => {
+                toast.error(`Failed to delete image: ${error.message}`);
+            },
+        });
+    };
 
-    if (loading) {
-        return renderLoading();
+    const handleEdit = (id: string) => {
+        navigate(`/editor/${id}`);
+    };
+
+    if (isLoading) {
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+                <CircularProgress />
+            </Box>
+        );
     }
 
     if (error) {
-        return <RenderError error={error} />
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+                <Typography variant="h6">Failed to load images: {error.message}</Typography>
+            </Box>
+        );
     }
+
+    console.log('Fetched images:', images);
 
     return (
         <Container maxWidth="md">
-            <Box display="flex" justifyContent="center" mt={2}>
-                <TextField
-                    label="Filter by User ID"
-                    variant="outlined"
-                    value={filterUserId}
-                    onChange={(e) => setFilterUserId(e.target.value)}
-                    fullWidth
-                />
-            </Box>
-            <Grid container spacing={2} mt={2}>
-                {images.map(image => (
-                    <Grid item xs={12} sm={6} md={4} key={image.id}>
-                        <Card>
-                            <CardMedia
-                                component="img"
-                                height="200"
-                                image={image.imageUrl}
-                                alt={`Image by ${image.userId}`}
-                            />
-                            <CardContent>
-                                <Typography variant="body2" color="textSecondary">
-                                    Uploaded by: {image.userId}
-                                </Typography>
-                                <Typography variant="body2" color="textSecondary">
-                                    {new Date(image.createdAt).toLocaleString()}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
+            <ToastContainer />
+            <Button
+                variant="contained"
+                color="primary"
+                onClick={() => navigate('/editor')}
+                sx={{ margin: 2 }}
+            >
+                Create Image
+            </Button>
+            {images.length > 0 ? (
+                <Grid container spacing={2} mt={2}>
+                    {images.map((image) => (
+                        <Grid item xs={12} sm={6} md={4} key={image.id}>
+                            <Card onClick={() => handleEdit(image.id)} style={{ cursor: 'pointer' }}>
+                                {image.imageUrl && (
+                                    <CardMedia component="img" height="200" image={image.imageUrl} alt={image.title} />
+                                )}
+                                <CardContent>
+                                    <Typography variant="h6">{image.title}</Typography>
+                                    <Typography variant="body2">{image.description}</Typography>
+                                    <IconButton
+                                        aria-label="delete"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(image.id);
+                                        }}
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            ) : (
+                <Typography mt={2}>No images yet.</Typography>
+            )}
         </Container>
     );
 };
 
-export default ImageFeed;
+export default ImageFeedPage;

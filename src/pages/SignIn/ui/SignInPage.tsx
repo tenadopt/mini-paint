@@ -14,7 +14,7 @@ const signInSchema = z.object({
 
 type SignInFormValues = z.infer<typeof signInSchema>;
 
-const SignInPage: React.FC = () => {
+const SignInPage = () => {
     const dispatch = useAppDispatch();
     const { loading, error } = useAppSelector((state) => state.auth);
 

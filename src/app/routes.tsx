@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, ReactNode } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } from 'react-router-dom';
 import ErrorBoundary from 'shared/model/ErrorBoundary';
-import { Box, CircularProgress } from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import { useAppSelector } from 'shared/hooks/hooks';
 import AppLayout from "widgets/AppLayout";
 
@@ -10,9 +10,8 @@ const SignInPage = lazy(() => import('pages/SignIn/ui/SignInPage'));
 const SignUpPage = lazy(() => import('pages/SignUp/ui/SignUpPage'));
 const ImageFeedPage = lazy(() => import('pages/ImageFeed/ui/ImageFeedPage'));
 const ImageEditorPage = lazy(() => import('pages/ImageEditor/ui/ImageEditorPage'));
-const WorkPage = lazy(() => import('pages/Work/ui/WorkPage'));
 
-const RequireAuth: React.FC<{ children: ReactNode }> = ({ children }) => {
+const RequireAuth = ({ children }: { children: ReactNode }) => {
     const auth = useAppSelector((state) => state.auth);
     const location = useLocation();
 
@@ -23,32 +22,26 @@ const RequireAuth: React.FC<{ children: ReactNode }> = ({ children }) => {
     return <>{children}</>;
 };
 
-const PublicLayout: React.FC = () => {
+const PublicLayout = () => {
     const auth = useAppSelector((state) => state.auth);
     if (auth.userId) return <Navigate to="/feed" replace />;
     return (
         <AppLayout>
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<CircularProgress />}>
                 <Outlet />
             </Suspense>
         </AppLayout>
     );
 };
 
-const AuthenticatedLayout: React.FC = () => (
+const AuthenticatedLayout = () => (
     <RequireAuth>
         <AppLayout>
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<CircularProgress />}>
                 <Outlet />
             </Suspense>
         </AppLayout>
     </RequireAuth>
-);
-
-const LoadingFallback: React.FC = () => (
-    <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-        <CircularProgress />
-    </Box>
 );
 
 const router = createBrowserRouter([
@@ -59,6 +52,10 @@ const router = createBrowserRouter([
         children: [
             {
                 path: "",
+                element: <Navigate to="homepage" replace />,
+            },
+            {
+                path: "homepage",
                 element: <HomePage />,
             },
             {
@@ -84,13 +81,13 @@ const router = createBrowserRouter([
             },
             {
                 path: "editor/:workId",
-                element: <WorkPage />,
+                element: <ImageEditorPage />,
             }
         ]
     }
 ]);
 
-const AppRoutes: React.FC = () => (
+const AppRoutes = () => (
     <RouterProvider router={router} />
 );
 

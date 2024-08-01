@@ -68,6 +68,16 @@ const authSlice = createSlice({
             state.token = null;
             state.error = null;
             state.loading = false;
+            localStorage.removeItem('userId');
+            localStorage.removeItem('token');
+        },
+        checkAuth(state: AuthState) {
+            const userId = localStorage.getItem('userId');
+            const token = localStorage.getItem('token');
+            if (userId && token) {
+                state.userId = userId;
+                state.token = token;
+            }
         },
     },
     extraReducers: (builder) => {
@@ -76,10 +86,12 @@ const authSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(signIn.fulfilled, (state: AuthState, action: PayloadAction<AuthResponse>) => {
+            .addCase(signIn.fulfilled, (state: AuthState, action) => {
                 state.loading = false;
                 state.userId = action.payload.userId;
                 state.token = action.payload.token;
+                localStorage.setItem('userId', action.payload.userId);
+                localStorage.setItem('token', action.payload.token);
             })
             .addCase(signIn.rejected, (state: AuthState, action) => {
                 state.loading = false;
@@ -93,6 +105,8 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.userId = action.payload.userId;
                 state.token = action.payload.token;
+                localStorage.setItem('userId', action.payload.userId);
+                localStorage.setItem('token', action.payload.token);
             })
             .addCase(signUp.rejected, (state: AuthState, action) => {
                 state.loading = false;
@@ -101,7 +115,7 @@ const authSlice = createSlice({
     },
 });
 
-export const { signOut } = authSlice.actions;
+export const { signOut, checkAuth } = authSlice.actions;
 
 export const selectAuth = (state: RootState): AuthState => state.auth;
 

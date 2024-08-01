@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Container, TextField, Button, Typography } from '@mui/material';
+import { Box, Container, TextField, Button, Typography, CircularProgress } from '@mui/material';
 import { useForm, SubmitHandler, FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { doc, getDoc, addDoc, updateDoc, collection, DocumentReference, CollectionReference, UpdateData } from 'firebase/firestore';
+import { doc, getDoc, addDoc, updateDoc, collection, DocumentReference } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { useAppSelector } from 'shared/hooks/hooks';
 import { selectAuth } from 'features/auth/model/authSlice';
-import CanvasEditor from 'features/imageEditor/ui/CanvasEditor';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import renderLoading from 'shared/model/renderLoading';
-import RenderError from 'shared/model/RenderError';
+import CanvasEditor, { CanvasEditorHandle } from 'features/imageEditor/ui/CanvasEditor';
 
 const workSchema = z.object({
     title: z.string().min(1, 'Title is required'),
     description: z.string().min(1, 'Description is required'),
-    imageUrl: z.string().url('Invalid URL'),
+    imageUrl: z.string().optional(),
 });
 
 type WorkFormValues = z.infer<typeof workSchema>;
@@ -26,7 +24,7 @@ interface Work extends WorkFormValues {
     userId: string;
 }
 
-const ImageEditorPage: React.FC = () => {
+const ImageEditorPage = () => {
     const { workId } = useParams<{ workId: string }>();
     const navigate = useNavigate();
     const { userId } = useAppSelector(selectAuth);
@@ -35,8 +33,8 @@ const ImageEditorPage: React.FC = () => {
     });
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [initialData, setInitialData] = useState<WorkFormValues | null>(null);
-    const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [imageUrl, setImageUrl] = useState<string>('');
+    const canvasEditorRef = useRef<CanvasEditorHandle | null>(null);
 
     useEffect(() => {
         const loadWork = async () => {
@@ -48,7 +46,7 @@ const ImageEditorPage: React.FC = () => {
             setLoading(true);
 
             try {
-                const docRef = doc(db, 'works', workId) as DocumentReference<Work>;
+                const docRef: DocumentReference = doc(db, 'works', workId);
                 const docSnap = await getDoc(docRef);
 
                 if (!docSnap.exists()) {
@@ -66,14 +64,14 @@ const ImageEditorPage: React.FC = () => {
                 }
 
                 const { title, description, imageUrl } = work;
-                setInitialData({ title, description, imageUrl });
-                setValue<'title'>('title', title);
-                setValue<'description'>('description', description);
-                setValue<'imageUrl'>('imageUrl', imageUrl);
-                setIsEditing(true);
+                setValue('title', title);
+                setValue('description', description);
+                setValue('imageUrl', imageUrl || '');
+                setImageUrl(imageUrl || '');
 
             } catch (err) {
                 toast.error('Failed to load work');
+                console.error('Failed to load work:', err);
                 setError('Failed to load work');
             } finally {
                 setLoading(false);
@@ -87,17 +85,26 @@ const ImageEditorPage: React.FC = () => {
         if (!userId) return;
         setLoading(true);
         try {
-            if (isEditing && workId) {
-                const docRef: DocumentReference<Work> = doc(db, 'works', workId) as DocumentReference<Work>;
-                await updateDoc(docRef, data as UpdateData<WorkFormValues>);
+            if (canvasEditorRef.current) {
+                const imageUrl = await canvasEditorRef.current.saveCanvas();
+                data.imageUrl = imageUrl;
+                console.log('Saved image URL:', imageUrl); // Added logging
+            }
+
+            console.log('Submitting data:', data); // Added logging
+
+            if (workId) {
+                const docRef: DocumentReference = doc(db, 'works', workId);
+                await updateDoc(docRef, data);
                 toast.success('Work updated successfully');
             } else {
-                const worksCollection: CollectionReference<Work> = collection(db, 'works') as CollectionReference<Work>;
+                const worksCollection = collection(db, 'works');
                 await addDoc(worksCollection, { ...data, userId });
                 toast.success('Work added successfully');
             }
             navigate('/');
         } catch (err) {
+            console.error('Failed to save work:', err);
             setError('Failed to save work');
             toast.error('Failed to save work');
         } finally {
@@ -105,10 +112,14 @@ const ImageEditorPage: React.FC = () => {
         }
     };
 
+    const handleClearCanvas = () => {
+        canvasEditorRef.current?.clearCanvas();
+    };
+
     if (loading) {
         return (
             <Container maxWidth="md">
-                {renderLoading()}
+                <CircularProgress />
             </Container>
         );
     }
@@ -116,7 +127,7 @@ const ImageEditorPage: React.FC = () => {
     if (error) {
         return (
             <Container maxWidth="md">
-                <RenderError error={error} />
+                <Typography color="error">{error}</Typography>
             </Container>
         );
     }
@@ -124,7 +135,7 @@ const ImageEditorPage: React.FC = () => {
     return (
         <Container maxWidth="md">
             <Typography variant="h4" component="h1" gutterBottom>
-                {isEditing ? 'Edit Work' : 'Create New Work'}
+                {workId ? 'Edit Work' : 'Create New Work'}
             </Typography>
             <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
                 <TextField
@@ -143,18 +154,15 @@ const ImageEditorPage: React.FC = () => {
                     error={!!errors.description}
                     helperText={errors.description?.message}
                 />
-                <TextField
-                    label="Image URL"
-                    fullWidth
-                    margin="normal"
-                    {...register('imageUrl' as FieldPath<WorkFormValues>)}
-                    error={!!errors.imageUrl}
-                    helperText={errors.imageUrl?.message}
-                />
-                <CanvasEditor imageUrl={initialData?.imageUrl || ''} />
                 <Button variant="contained" color="primary" type="submit" disabled={loading}>
-                    {loading ? renderLoading() : isEditing ? 'Update Work' : 'Create Work'}
+                    {loading ? 'Saving...' : workId ? 'Update Work' : 'Create Work'}
                 </Button>
+                <Button variant="contained" color="secondary" onClick={handleClearCanvas}>
+                    Clear Canvas
+                </Button>
+            </Box>
+            <Box mt={4}>
+                <CanvasEditor ref={canvasEditorRef} imageUrl={imageUrl} onSave={setImageUrl} />
             </Box>
         </Container>
     );
