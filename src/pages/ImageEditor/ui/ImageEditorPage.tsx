@@ -11,7 +11,6 @@ import { selectAuth } from 'features/auth/model/authSlice';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CanvasEditor, { CanvasEditorHandle } from 'features/imageEditor/ui/CanvasEditor';
-import {getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 
 const workSchema = z.object({
     title: z.string().min(1, 'Title is required'),
@@ -72,6 +71,7 @@ const ImageEditorPage = () => {
 
             } catch (err) {
                 toast.error('Failed to load work');
+                console.error('Failed to load work:', err);
                 setError('Failed to load work');
             } finally {
                 setLoading(false);
@@ -84,38 +84,36 @@ const ImageEditorPage = () => {
     const onSubmit: SubmitHandler<WorkFormValues> = async (data) => {
         if (!userId) return;
         setLoading(true);
-        let newImageUrl = imageUrl;
         try {
             if (canvasEditorRef.current) {
-                const canvasDataUrl = canvasEditorRef.current.getCanvasDataUrl();
-                if (canvasDataUrl) {
-                    const response = await fetch(canvasDataUrl);
-                    const blob = await response.blob();
-                    const file = new File([blob], `canvas-image-${Date.now()}.png`, { type: 'image/png' });
-                    const storage = getStorage();
-                    const storageRef = ref(storage, `images/${file.name}`);
-                    await uploadBytes(storageRef, file);
-                    newImageUrl = await getDownloadURL(storageRef);
-                    setImageUrl(newImageUrl);
-                }
+                const imageUrl = await canvasEditorRef.current.saveCanvas();
+                data.imageUrl = imageUrl;
+                console.log('Saved image URL:', imageUrl); // Added logging
             }
+
+            console.log('Submitting data:', data); // Added logging
 
             if (workId) {
                 const docRef: DocumentReference = doc(db, 'works', workId);
-                await updateDoc(docRef, { ...data, imageUrl: newImageUrl });
+                await updateDoc(docRef, data);
                 toast.success('Work updated successfully');
             } else {
                 const worksCollection = collection(db, 'works');
-                await addDoc(worksCollection, { ...data, userId, imageUrl: newImageUrl });
+                await addDoc(worksCollection, { ...data, userId });
                 toast.success('Work added successfully');
             }
             navigate('/');
         } catch (err) {
+            console.error('Failed to save work:', err);
             setError('Failed to save work');
             toast.error('Failed to save work');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleClearCanvas = () => {
+        canvasEditorRef.current?.clearCanvas();
     };
 
     if (loading) {
@@ -159,14 +157,12 @@ const ImageEditorPage = () => {
                 <Button variant="contained" color="primary" type="submit" disabled={loading}>
                     {loading ? 'Saving...' : workId ? 'Update Work' : 'Create Work'}
                 </Button>
+                <Button variant="contained" color="secondary" onClick={handleClearCanvas}>
+                    Clear Canvas
+                </Button>
             </Box>
             <Box mt={4}>
                 <CanvasEditor ref={canvasEditorRef} imageUrl={imageUrl} onSave={setImageUrl} />
-                {imageUrl && (
-                    <Box mt={2} display="flex" justifyContent="center">
-                        <img src={imageUrl} alt="Canvas" style={{ maxWidth: '100%', maxHeight: '500px' }} />
-                    </Box>
-                )}
             </Box>
         </Container>
     );

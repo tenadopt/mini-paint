@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } f
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from 'app/store';
 import {
-    Button, Slider, TextField, Container, Box, Select, MenuItem, InputLabel, FormControl, SelectChangeEvent,
+    Slider, TextField, Container, Box, Select, MenuItem, InputLabel, FormControl, SelectChangeEvent,
 } from '@mui/material';
 import { setBrushSizeWithState, setColorWithState } from 'features/imageEditor/model/imageEditorSlice';
 import { useSaveImage } from 'features/imageGallery/api/useImageQueries';
@@ -16,7 +16,8 @@ interface CanvasEditorProps {
 
 export interface CanvasEditorHandle {
     getCanvasDataUrl: () => string;
-    saveCanvas: () => void;
+    saveCanvas: () => Promise<string>;
+    clearCanvas: () => void;
 }
 
 const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageUrl, onSave }, ref) => {
@@ -32,6 +33,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
     useImperativeHandle(ref, () => ({
         getCanvasDataUrl,
         saveCanvas,
+        clearCanvas,
     }));
 
     useEffect(() => {
@@ -48,15 +50,62 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
         context.strokeStyle = settings.color;
         context.lineWidth = settings.brushSize;
         contextRef.current = context;
+    }, [settings.brushSize, settings.color]);
 
+    useEffect(() => {
         if (imageUrl) {
-            const img = new Image();
-            img.src = imageUrl;
-            img.onload = () => {
-                context.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const loadImage = async () => {
+                try {
+                    const canvas = canvasRef.current;
+                    const context = contextRef.current;
+                    if (!canvas || !context) return;
+
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous'; // Set crossOrigin attribute
+                    img.src = imageUrl;
+                    img.onload = () => {
+                        context.clearRect(0, 0, canvas.width, canvas.height);
+                        drawImageToFitCanvas(img);
+                    };
+                    img.onerror = (err) => {
+                        console.error('Failed to load image:', err);
+                    };
+                } catch (error) {
+                    console.error('Error loading image:', error);
+                }
             };
+            loadImage();
         }
-    }, [settings.brushSize, settings.color, imageUrl]);
+    }, [imageUrl]);
+
+    const drawImageToFitCanvas = (img: HTMLImageElement) => {
+        const canvas = canvasRef.current;
+        const context = contextRef.current;
+        if (!canvas || !context) return;
+
+        const canvasAspectRatio = canvas.width / canvas.height;
+        const imageAspectRatio = img.width / img.height;
+
+        let renderableHeight, renderableWidth, xStart, yStart;
+
+        if (imageAspectRatio < canvasAspectRatio) {
+            renderableHeight = canvas.height;
+            renderableWidth = img.width * (renderableHeight / img.height);
+            xStart = (canvas.width - renderableWidth) / 2;
+            yStart = 0;
+        } else if (imageAspectRatio > canvasAspectRatio) {
+            renderableWidth = canvas.width;
+            renderableHeight = img.height * (renderableWidth / img.width);
+            xStart = 0;
+            yStart = (canvas.height - renderableHeight) / 2;
+        } else {
+            renderableHeight = canvas.height;
+            renderableWidth = canvas.width;
+            xStart = 0;
+            yStart = 0;
+        }
+        context.drawImage(img, xStart, yStart, renderableWidth, renderableHeight);
+    };
 
     const getCanvasDataUrl = () => {
         return canvasRef.current?.toDataURL() || '';
@@ -105,16 +154,22 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
         }
     };
 
-    const saveCanvas = () => {
+    const saveCanvas = async () => {
         const canvas = canvasRef.current;
         if (canvas) {
             const dataUrl = canvas.toDataURL();
-            saveImageMutation.mutate(dataUrl, {
-                onSuccess: (url) => {
-                    onSave(url);
-                },
-            });
+            console.log('Saving canvas data URL:', dataUrl); // Added logging
+            try {
+                const url = await saveImageMutation.mutateAsync(dataUrl);
+                console.log('Saved image URL:', url); // Added logging
+                onSave(url);
+                return url;
+            } catch (error) {
+                console.error("Failed to save canvas image", error);
+                throw error;
+            }
         }
+        return '';
     };
 
     const drawStar = (cx: number, cy: number, outerX: number, outerY: number) => {
@@ -241,9 +296,6 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
                     valueLabelDisplay="auto"
                     style={{ width: 200, margin: '0 20px' }}
                 />
-                <Button variant="contained" color="primary" onClick={clearCanvas}>
-                    Clear Canvas
-                </Button>
             </Box>
             <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center">
                 <canvas
