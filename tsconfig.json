@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
+    "lib": ["dom", "es2017"],
     "module": "commonjs",
     "jsx": "react",
     "strict": true,
@@ -8,7 +9,19 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "app/*": ["src/app/*"],
+      "features/*": ["src/features/*"],
+      "entities/*": ["src/entities/*"],
+      "shared/*": ["src/shared/*"],
+      "pages/*": ["src/pages/*"],
+      "widgets/*": ["src/widgets/*"],
+      "firebaseConfig": ["firebaseConfig"],
+      "firebase/*": ["node_modules/firebase/*"]
+    }
   },
-  "include": ["src", "webpack.config.ts", ".eslintrc.js", "prettier.config.js"]
+  "include": ["src", "webpack.config.ts", ".eslintrc.js", "prettier.config.js"],
+  "exclude": ["node_modules"]
 }
