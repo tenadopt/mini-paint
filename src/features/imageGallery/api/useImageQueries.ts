@@ -31,7 +31,7 @@ export const useSaveImage = () => {
 export const useDeleteImage = () => {
     const queryClient = useQueryClient();
     return useMutation<void, Error, string>({
-        mutationFn: (id: string) => deleteImage(id),
+        mutationFn: deleteImage,
         onSuccess: async () => {
             await queryClient.invalidateQueries({queryKey: ['images']});
         },

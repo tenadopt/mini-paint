@@ -1,5 +1,5 @@
 import { collection, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
-import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db } from 'firebaseConfig';
 
 export interface Image {
@@ -12,21 +12,19 @@ export interface Image {
 }
 
 export const fetchImages = async (userId?: string): Promise<Image[]> => {
-    console.log('Fetching images for userId:', userId);
     try {
-        const imagesCollection = collection(db, 'works'); // Ensure 'works' is the correct collection name
+        const imagesCollection = collection(db, 'works');
         const q = userId
             ? query(imagesCollection, where('userId', '==', userId))
             : query(imagesCollection);
         const querySnapshot = await getDocs(q);
-        console.log('Query snapshot:', querySnapshot); // Log the raw query snapshot
+
         const images = querySnapshot.docs.map(doc => {
             const data = doc.data();
-            console.log('Document data:', data); // Log each document's data
             return {
                 id: doc.id,
                 ...(data as Omit<Image, 'id'>),
-                createdAt: data.createdAt?.toDate() // Ensure createdAt is correctly parsed
+                createdAt: data.createdAt?.toDate()
             };
         });
         console.log('Images retrieved:', images);
@@ -60,10 +58,16 @@ export const saveImageToFirebase = async (dataUrl: string): Promise<string> => {
     }
 };
 
-export const deleteImage = async (id: string): Promise<void> => {
+export const deleteImage = async (id: string, imageUrl?: string): Promise<void> => {
     try {
-        const docRef = doc(db, 'images', id);
+        const docRef = doc(db, 'works', id);
         await deleteDoc(docRef);
+
+        if (imageUrl) {
+            const storage = getStorage();
+            const storageRef = ref(storage, imageUrl);
+            await deleteObject(storageRef);
+        }
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.error('Error deleting image:', error);

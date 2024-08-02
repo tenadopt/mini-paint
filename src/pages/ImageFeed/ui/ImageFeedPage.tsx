@@ -19,7 +19,6 @@ import { useNavigate } from 'react-router-dom';
 
 const ImageFeedPage = () => {
     const userId = useAppSelector(state => state.auth.userId);
-    console.log('User ID:', userId);
     const { data: images = [], error, isLoading } = useFetchImages(userId || undefined);
     const deleteImageMutation = useDeleteImage();
     const navigate = useNavigate();
@@ -55,8 +54,6 @@ const ImageFeedPage = () => {
         );
     }
 
-    console.log('Fetched images:', images);
-
     return (
         <Container maxWidth="md">
             <ToastContainer />
@@ -64,7 +61,7 @@ const ImageFeedPage = () => {
                 variant="contained"
                 color="primary"
                 onClick={() => navigate('/editor')}
-                sx={{ margin: 2 }}
+                sx={{ my: 2}}
             >
                 Create Image
             </Button>
@@ -73,12 +70,18 @@ const ImageFeedPage = () => {
                     {images.map((image) => (
                         <Grid item xs={12} sm={6} md={4} key={image.id}>
                             <Card onClick={() => handleEdit(image.id)} style={{ cursor: 'pointer' }}>
-                                {image.imageUrl && (
+                                {image.imageUrl ? (
                                     <CardMedia component="img" height="200" image={image.imageUrl} alt={image.title} />
+                                ) : (
+                                    <CardContent>
+                                        <Typography variant="h6">Image not available</Typography>
+                                    </CardContent>
                                 )}
-                                <CardContent>
-                                    <Typography variant="h6">{image.title}</Typography>
-                                    <Typography variant="body2">{image.description}</Typography>
+                                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Box>
+                                        <Typography variant="h6">{image.title}</Typography>
+                                        <Typography variant="body2">{image.description}</Typography>
+                                    </Box>
                                     <IconButton
                                         aria-label="delete"
                                         onClick={(e) => {
