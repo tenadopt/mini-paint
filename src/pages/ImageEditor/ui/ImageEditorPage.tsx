@@ -35,6 +35,7 @@ const ImageEditorPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [imageUrl, setImageUrl] = useState<string>('');
     const [loadImage, setLoadImage] = useState<boolean>(false);
+    const [hasDrawn, setHasDrawn] = useState<boolean>(false);
     const canvasEditorRef = useRef<CanvasEditorHandle | null>(null);
 
     useEffect(() => {
@@ -121,6 +122,7 @@ const ImageEditorPage = () => {
 
     const handleClearCanvas = () => {
         canvasEditorRef.current?.clearCanvas();
+        setHasDrawn(false);
     };
 
     if (loading) {
@@ -161,7 +163,7 @@ const ImageEditorPage = () => {
                     error={!!errors.description}
                     helperText={errors.description?.message}
                 />
-                <Button variant="contained" color="primary" type="submit" disabled={loading}>
+                <Button variant="contained" color="primary" type="submit" disabled={loading || !hasDrawn}>
                     {loading ? 'Saving...' : workId ? 'Update Work' : 'Create Work'}
                 </Button>
                 <Button variant="contained" color="secondary" onClick={handleClearCanvas}>
@@ -169,7 +171,7 @@ const ImageEditorPage = () => {
                 </Button>
             </Box>
             <Box mt={4}>
-                <CanvasEditor ref={canvasEditorRef} imageUrl={imageUrl} onSave={setImageUrl} loadImage={loadImage} />
+                <CanvasEditor ref={canvasEditorRef} imageUrl={imageUrl} onSave={setImageUrl} loadImage={loadImage} onEdit={setHasDrawn} />
             </Box>
         </Container>
     );
