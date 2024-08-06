@@ -12,6 +12,7 @@ type ShapeType = 'line' | 'star' | 'polygon' | 'circle' | 'rectangle';
 interface CanvasEditorProps {
     imageUrl?: string;
     onSave: (url: string) => void;
+    loadImage: boolean;
 }
 
 export interface CanvasEditorHandle {
@@ -20,7 +21,7 @@ export interface CanvasEditorHandle {
     clearCanvas: () => void;
 }
 
-const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageUrl, onSave }, ref) => {
+const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageUrl, onSave, loadImage }, ref) => {
     const dispatch = useDispatch();
     const settings = useSelector((state: RootState) => state.imageEditor.settings);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -38,14 +39,18 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
     useEffect(() => {
         const canvas = canvasRef.current;
+
         if (!canvas) return;
+
         canvas.width = window.innerHeight * 0.8;
         canvas.height = window.innerHeight * 0.8;
         canvas.style.width = `${window.innerHeight * 0.8}px`;
         canvas.style.height = `${window.innerHeight * 0.8}px`;
 
         const context = canvas.getContext('2d');
+
         if (!context) return;
+
         context.lineCap = 'round';
         context.strokeStyle = settings.color;
         context.lineWidth = settings.brushSize;
@@ -53,15 +58,17 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
     }, [settings.brushSize, settings.color]);
 
     useEffect(() => {
-        if (imageUrl) {
-            const loadImage = async () => {
+        if (loadImage && imageUrl) {
+            const loadImageToCanvas = async () => {
                 try {
                     const canvas = canvasRef.current;
                     const context = contextRef.current;
+
                     if (!canvas || !context) return;
 
                     const img = new Image();
-                    img.crossOrigin = 'anonymous'; // Set crossOrigin attribute
+
+                    img.crossOrigin = 'anonymous';
                     img.src = imageUrl;
                     img.onload = () => {
                         context.clearRect(0, 0, canvas.width, canvas.height);
@@ -74,13 +81,15 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
                     console.error('Error loading image:', error);
                 }
             };
-            loadImage();
+
+            loadImageToCanvas();
         }
-    }, [imageUrl]);
+    }, [imageUrl, loadImage]);
 
     const drawImageToFitCanvas = (img: HTMLImageElement) => {
         const canvas = canvasRef.current;
         const context = contextRef.current;
+
         if (!canvas || !context) return;
 
         const canvasAspectRatio = canvas.width / canvas.height;
@@ -104,6 +113,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
             xStart = 0;
             yStart = 0;
         }
+
         context.drawImage(img, xStart, yStart, renderableWidth, renderableHeight);
     };
 
@@ -113,6 +123,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
     const startDrawing = (event: React.MouseEvent<HTMLCanvasElement>) => {
         const { offsetX, offsetY } = event.nativeEvent;
+
         setStartPosition({ x: offsetX, y: offsetY });
         setIsDrawing(true);
         contextRef.current?.beginPath();
@@ -121,7 +132,9 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
     const finishDrawing = (event: React.MouseEvent<HTMLCanvasElement>) => {
         if (!isDrawing || !startPosition) return;
+
         const { offsetX, offsetY } = event.nativeEvent;
+
         if (shape === 'star') {
             drawStar(startPosition.x, startPosition.y, offsetX, offsetY);
         } else if (shape === 'polygon') {
@@ -131,6 +144,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
         } else if (shape === 'rectangle') {
             drawRectangle(startPosition.x, startPosition.y, offsetX, offsetY);
         }
+
         setIsDrawing(false);
         setStartPosition(null);
         contextRef.current?.closePath();
@@ -138,8 +152,10 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
     const draw = (event: React.MouseEvent<HTMLCanvasElement>) => {
         if (!isDrawing || shape !== 'line') return;
+
         const { offsetX, offsetY } = event.nativeEvent;
         const context = contextRef.current;
+
         if (context) {
             context.lineTo(offsetX, offsetY);
             context.stroke();
@@ -149,6 +165,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
     const clearCanvas = () => {
         const canvas = canvasRef.current;
         const context = contextRef.current;
+
         if (canvas && context) {
             context.clearRect(0, 0, canvas.width, canvas.height);
         }
@@ -156,24 +173,28 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
     const saveCanvas = async () => {
         const canvas = canvasRef.current;
+
         if (canvas) {
             const dataUrl = canvas.toDataURL();
-            console.log('Saving canvas data URL:', dataUrl); // Added logging
+
             try {
                 const url = await saveImageMutation.mutateAsync(dataUrl);
-                console.log('Saved image URL:', url); // Added logging
+
                 onSave(url);
+
                 return url;
             } catch (error) {
                 console.error("Failed to save canvas image", error);
                 throw error;
             }
         }
+
         return '';
     };
 
     const drawStar = (cx: number, cy: number, outerX: number, outerY: number) => {
         const context = contextRef.current;
+
         if (!context) return;
 
         const spikes = 5;
@@ -185,6 +206,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
         const step = Math.PI / spikes;
 
         context.beginPath();
+
         for (let i = 0; i < spikes; i++) {
             x = cx + Math.cos(rotation) * outerRadius;
             y = cy + Math.sin(rotation) * outerRadius;
@@ -204,23 +226,28 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
     const drawPolygon = (x1: number, y1: number, x2: number, y2: number, sides: number) => {
         const context = contextRef.current;
+
         if (!context) return;
 
         const radius = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
         const angle = (2 * Math.PI) / sides;
 
         context.beginPath();
+
         for (let i = 0; i < sides; i++) {
             const x = x1 + radius * Math.cos(angle * i);
             const y = y1 + radius * Math.sin(angle * i);
+
             context.lineTo(x, y);
         }
+
         context.closePath();
         context.stroke();
     };
 
     const drawCircle = (x1: number, y1: number, x2: number, y2: number) => {
         const context = contextRef.current;
+
         if (!context) return;
 
         const radius = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
@@ -232,6 +259,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
     const drawRectangle = (x1: number, y1: number, x2: number, y2: number) => {
         const context = contextRef.current;
+
         if (!context) return;
 
         const width = x2 - x1;

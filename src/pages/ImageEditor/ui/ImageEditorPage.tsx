@@ -34,12 +34,14 @@ const ImageEditorPage = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [imageUrl, setImageUrl] = useState<string>('');
+    const [loadImage, setLoadImage] = useState<boolean>(false);
     const canvasEditorRef = useRef<CanvasEditorHandle | null>(null);
 
     useEffect(() => {
         const loadWork = async () => {
             if (!workId) {
                 setLoading(false);
+
                 return;
             }
 
@@ -52,6 +54,7 @@ const ImageEditorPage = () => {
                 if (!docSnap.exists()) {
                     toast.error('Work not found');
                     setLoading(false);
+
                     return;
                 }
 
@@ -60,15 +63,17 @@ const ImageEditorPage = () => {
                 if (work.userId !== userId) {
                     toast.error('Work not found or you do not have access');
                     setLoading(false);
+
                     return;
                 }
 
                 const { title, description, imageUrl } = work;
+
                 setValue('title', title);
                 setValue('description', description);
                 setValue('imageUrl', imageUrl || '');
                 setImageUrl(imageUrl || '');
-
+                setLoadImage(true);
             } catch (err) {
                 toast.error('Failed to load work');
                 console.error('Failed to load work:', err);
@@ -83,25 +88,27 @@ const ImageEditorPage = () => {
 
     const onSubmit: SubmitHandler<WorkFormValues> = async (data) => {
         if (!userId) return;
+
         setLoading(true);
         try {
             if (canvasEditorRef.current) {
                 const imageUrl = await canvasEditorRef.current.saveCanvas();
-                data.imageUrl = imageUrl;
-                console.log('Saved image URL:', imageUrl); // Added logging
-            }
 
-            console.log('Submitting data:', data); // Added logging
+                data.imageUrl = imageUrl;
+            }
 
             if (workId) {
                 const docRef: DocumentReference = doc(db, 'works', workId);
+
                 await updateDoc(docRef, data);
                 toast.success('Work updated successfully');
             } else {
                 const worksCollection = collection(db, 'works');
+
                 await addDoc(worksCollection, { ...data, userId });
                 toast.success('Work added successfully');
             }
+
             navigate('/');
         } catch (err) {
             console.error('Failed to save work:', err);
@@ -162,7 +169,7 @@ const ImageEditorPage = () => {
                 </Button>
             </Box>
             <Box mt={4}>
-                <CanvasEditor ref={canvasEditorRef} imageUrl={imageUrl} onSave={setImageUrl} />
+                <CanvasEditor ref={canvasEditorRef} imageUrl={imageUrl} onSave={setImageUrl} loadImage={loadImage} />
             </Box>
         </Container>
     );
