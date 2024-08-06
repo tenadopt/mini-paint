@@ -9,7 +9,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => (
         <Container
             component="main"
             maxWidth="md"
-            sx={{ flexGrow: 1, pt: 2, pb: 2 }}
+            sx={{ flexGrow: 1, pt: '96px', pb: 2 }}
         >
             {children}
         </Container>
