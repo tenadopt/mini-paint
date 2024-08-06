@@ -4,6 +4,8 @@ import { Suspense } from 'react';
 import { useDispatch } from 'react-redux';
 import { checkAuth } from 'features/auth/model/authSlice';
 import AppRoutes from "app/routes";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
     const dispatch = useDispatch();
@@ -18,6 +20,7 @@ const App = () => {
             <Suspense fallback={<CircularProgress />}>
                 <AppRoutes />
             </Suspense>
+            <ToastContainer />
         </>
     );
 };

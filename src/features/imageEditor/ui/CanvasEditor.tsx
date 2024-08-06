@@ -6,6 +6,8 @@ import {
 } from '@mui/material';
 import { setBrushSizeWithState, setColorWithState } from 'features/imageEditor/model/imageEditorSlice';
 import { useSaveImage } from 'features/imageGallery/api/useImageQueries';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 type ShapeType = 'line' | 'star' | 'polygon' | 'circle' | 'rectangle';
 
@@ -74,11 +76,11 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
                         context.clearRect(0, 0, canvas.width, canvas.height);
                         drawImageToFitCanvas(img);
                     };
-                    img.onerror = (err) => {
-                        console.error('Failed to load image:', err);
+                    img.onerror = () => {
+                        toast.error('Failed to load image');
                     };
                 } catch (error) {
-                    console.error('Error loading image:', error);
+                    toast.error('Error loading image');
                 }
             };
 
@@ -184,7 +186,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
                 return url;
             } catch (error) {
-                console.error("Failed to save canvas image", error);
+                toast.error("Failed to save canvas image");
                 throw error;
             }
         }
@@ -293,6 +295,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
     return (
         <Container>
+            <ToastContainer />
             <Box display="flex" mt={2}>
                 <FormControl variant="outlined" style={{ minWidth: 120 }}>
                     <InputLabel>Shape</InputLabel>
