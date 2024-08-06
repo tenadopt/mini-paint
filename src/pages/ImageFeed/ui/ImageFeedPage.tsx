@@ -16,6 +16,7 @@ import {
 import { ToastContainer, toast } from 'react-toastify';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ImageFeedPage = () => {
     const userId = useAppSelector(state => state.auth.userId);
@@ -56,12 +57,12 @@ const ImageFeedPage = () => {
 
     return (
         <Container maxWidth="md">
-            <ToastContainer />
+            <ToastContainer autoClose={3000} hideProgressBar />
             <Button
                 variant="contained"
                 color="primary"
                 onClick={() => navigate('/editor')}
-                sx={{ my: 2}}
+                sx={{ my: 2 }}
             >
                 Create Image
             </Button>
@@ -71,7 +72,13 @@ const ImageFeedPage = () => {
                         <Grid item xs={12} sm={6} md={4} key={image.id}>
                             <Card onClick={() => handleEdit(image.id)} style={{ cursor: 'pointer' }}>
                                 {image.imageUrl ? (
-                                    <CardMedia component="img" height="200" image={image.imageUrl} alt={image.title} />
+                                    <CardMedia
+                                        component="img"
+                                        height="200"
+                                        image={image.imageUrl}
+                                        alt={image.title}
+                                        sx={{ maxHeight: '200px', objectFit: 'cover' }}
+                                    />
                                 ) : (
                                     <CardContent>
                                         <Typography variant="h6">Image not available</Typography>

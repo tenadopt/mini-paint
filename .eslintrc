@@ -48,7 +48,7 @@
             { "blankLine": "always", "prev": "*", "next": ["if", "for", "while", "switch", "do"] },
             { "blankLine": "always", "prev": ["if", "for", "while", "switch", "do"], "next": "*" }
         ],
-        "no-console": ["error", { "allow": ["warn", "error"] }]
+        "no-console": "error"
     },
     "settings": {
         "react": {
