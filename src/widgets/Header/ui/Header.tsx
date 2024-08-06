@@ -10,12 +10,17 @@ const Header = () => {
     const auth = useAppSelector((state) => state.auth);
 
     return (
-        <AppBar position="static">
+        <AppBar position="fixed">
             <Toolbar>
                 <Box display="flex" alignItems="center" flexGrow={1}>
-                    <Button color="inherit" onClick={() => navigate('/editor')}>
-                        Mini Paint Editor
+                    <Button color="inherit" onClick={() => navigate('/feed')}>
+                        Mini Paint Gallery
                     </Button>
+                    <Box mx={5}>
+                        <Button color="inherit" onClick={() => navigate('/editor')}>
+                            Mini Paint Editor
+                        </Button>
+                    </Box>
                 </Box>
                 <Box display="flex">
                     {!auth.userId ? (
@@ -29,7 +34,9 @@ const Header = () => {
                         </>
                     ) : (
                         <>
-                            <AuthStatus />
+                            <Box marginRight={2} display="flex" alignItems="center">
+                                <AuthStatus />
+                            </Box>
                             <LogoutButton />
                         </>
                     )}
