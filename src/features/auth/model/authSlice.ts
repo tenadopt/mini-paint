@@ -5,6 +5,7 @@ import { auth } from "firebaseConfig";
 
 interface AuthState {
     userId: string | null;
+    email: string | null;
     token: string | null;
     loading: boolean;
     error: string | null;
@@ -12,6 +13,7 @@ interface AuthState {
 
 const initialState: AuthState = {
     userId: null,
+    email: null,
     token: null,
     loading: false,
     error: null,
@@ -19,6 +21,7 @@ const initialState: AuthState = {
 
 interface AuthResponse {
     userId: string;
+    email: string;
     token: string;
 }
 
@@ -33,8 +36,10 @@ export const signIn = createAsyncThunk<AuthResponse, AuthCredentials, { rejectVa
         try {
             const userCredential: UserCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
             const token = await userCredential.user.getIdToken();
+
             return {
                 userId: userCredential.user.uid,
+                email: userCredential.user.email!,
                 token: token,
             };
         } catch (error) {
@@ -49,8 +54,10 @@ export const signUp = createAsyncThunk<AuthResponse, AuthCredentials, { rejectVa
         try {
             const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
             const token = await userCredential.user.getIdToken();
+
             return {
                 userId: userCredential.user.uid,
+                email: userCredential.user.email!,
                 token: token,
             };
         } catch (error) {
@@ -65,17 +72,22 @@ const authSlice = createSlice({
     reducers: {
         signOut(state: AuthState) {
             state.userId = null;
+            state.email = null;
             state.token = null;
             state.error = null;
             state.loading = false;
             localStorage.removeItem('userId');
+            localStorage.removeItem('email');
             localStorage.removeItem('token');
         },
         checkAuth(state: AuthState) {
             const userId = localStorage.getItem('userId');
+            const email = localStorage.getItem('email');
             const token = localStorage.getItem('token');
-            if (userId && token) {
+
+            if (userId && email && token) {
                 state.userId = userId;
+                state.email = email;
                 state.token = token;
             }
         },
@@ -89,8 +101,10 @@ const authSlice = createSlice({
             .addCase(signIn.fulfilled, (state: AuthState, action) => {
                 state.loading = false;
                 state.userId = action.payload.userId;
+                state.email = action.payload.email;
                 state.token = action.payload.token;
                 localStorage.setItem('userId', action.payload.userId);
+                localStorage.setItem('email', action.payload.email);
                 localStorage.setItem('token', action.payload.token);
             })
             .addCase(signIn.rejected, (state: AuthState, action) => {
@@ -104,8 +118,10 @@ const authSlice = createSlice({
             .addCase(signUp.fulfilled, (state: AuthState, action: PayloadAction<AuthResponse>) => {
                 state.loading = false;
                 state.userId = action.payload.userId;
+                state.email = action.payload.email;
                 state.token = action.payload.token;
                 localStorage.setItem('userId', action.payload.userId);
+                localStorage.setItem('email', action.payload.email);
                 localStorage.setItem('token', action.payload.token);
             })
             .addCase(signUp.rejected, (state: AuthState, action) => {

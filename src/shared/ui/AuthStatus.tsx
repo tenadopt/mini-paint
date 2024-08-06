@@ -4,13 +4,13 @@ import { useAppSelector } from 'shared/hooks/hooks';
 const AuthStatus = () => {
     const auth = useAppSelector((state) => state.auth);
 
-    if (!auth.userId) {
+    if (!auth.userId || !auth.email) {
         return null;
     }
 
     return (
         <div>
-            Logged in as {auth.userId}
+            Logged in as {auth.email}
         </div>
     );
 };
