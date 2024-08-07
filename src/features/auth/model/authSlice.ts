@@ -36,10 +36,11 @@ export const signIn = createAsyncThunk<AuthResponse, AuthCredentials, { rejectVa
         try {
             const userCredential: UserCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
             const token = await userCredential.user.getIdToken();
+            const email = userCredential.user.email ?? "";
 
             return {
                 userId: userCredential.user.uid,
-                email: userCredential.user.email!,
+                email: email,
                 token: token,
             };
         } catch (error) {
@@ -54,10 +55,11 @@ export const signUp = createAsyncThunk<AuthResponse, AuthCredentials, { rejectVa
         try {
             const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
             const token = await userCredential.user.getIdToken();
+            const email = userCredential.user.email ?? "";
 
             return {
                 userId: userCredential.user.uid,
-                email: userCredential.user.email!,
+                email: email,
                 token: token,
             };
         } catch (error) {
