@@ -2,7 +2,6 @@ import { collection, getDocs, query, where, deleteDoc, doc } from 'firebase/fire
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db } from 'firebaseConfig';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 export interface Image {
     id: string;

@@ -7,7 +7,6 @@ import {
 import { setBrushSizeWithState, setColorWithState } from 'features/imageEditor/model/imageEditorSlice';
 import { useSaveImage } from 'features/imageGallery/api/useImageQueries';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 type ShapeType = 'line' | 'star' | 'polygon' | 'circle' | 'rectangle';
 

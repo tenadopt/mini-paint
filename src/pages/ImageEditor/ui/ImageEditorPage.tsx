@@ -9,7 +9,6 @@ import { db } from 'firebaseConfig';
 import { useAppSelector } from 'shared/hooks/hooks';
 import { selectAuth } from 'features/auth/model/authSlice';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import CanvasEditor, { CanvasEditorHandle } from 'features/imageEditor/ui/CanvasEditor';
 
 const workSchema = z.object({

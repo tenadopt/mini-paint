@@ -16,7 +16,6 @@ import {
 import { ToastContainer, toast } from 'react-toastify';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
-import 'react-toastify/dist/ReactToastify.css';
 
 const ImageFeedPage = () => {
     const userId = useAppSelector(state => state.auth.userId);
