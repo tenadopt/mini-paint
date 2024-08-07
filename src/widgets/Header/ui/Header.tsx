@@ -1,9 +1,9 @@
 import React from 'react';
-import { AppBar, Toolbar, Button, Box } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import {AppBar, Toolbar, Button, Box} from '@mui/material';
+import {useNavigate} from 'react-router-dom';
 import AuthStatus from 'shared/ui/AuthStatus';
 import LogoutButton from 'shared/ui/LogoutButton';
-import { useAppSelector } from 'shared/hooks/hooks';
+import {useAppSelector} from 'shared/hooks/hooks';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -12,17 +12,15 @@ const Header = () => {
     return (
         <AppBar position="fixed">
             <Toolbar>
-                <Box display="flex" alignItems="center" flexGrow={1}>
+                <Box display="flex" alignItems="center" flexGrow={1} gap={5}>
                     <Button color="inherit" onClick={() => navigate('/feed')}>
                         Mini Paint Gallery
                     </Button>
-                    <Box mx={5}>
-                        <Button color="inherit" onClick={() => navigate('/editor')}>
-                            Mini Paint Editor
-                        </Button>
-                    </Box>
+                    <Button color="inherit" onClick={() => navigate('/editor')}>
+                        Mini Paint Editor
+                    </Button>
                 </Box>
-                <Box display="flex">
+                <Box display="flex" gap={2}>
                     {!auth.userId ? (
                         <>
                             <Button color="inherit" onClick={() => navigate('/signin')}>
@@ -33,12 +31,10 @@ const Header = () => {
                             </Button>
                         </>
                     ) : (
-                        <>
-                            <Box marginRight={2} display="flex" alignItems="center">
-                                <AuthStatus />
-                            </Box>
-                            <LogoutButton />
-                        </>
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <AuthStatus/>
+                            <LogoutButton/>
+                        </Box>
                     )}
                 </Box>
             </Toolbar>
