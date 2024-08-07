@@ -1,19 +1,20 @@
-import React, { ReactNode } from 'react';
+import React, {ReactNode} from 'react';
 import Header from 'widgets/Header/ui/Header';
 import Footer from 'widgets/Footer/ui/Footer';
-import { Box, Container } from '@mui/material';
+import {Box, Container, Toolbar} from '@mui/material';
 
-const AppLayout = ({ children }: { children: ReactNode }) => (
+const AppLayout = ({children}: { children: ReactNode }) => (
     <Box display="flex" flexDirection="column" minHeight="100vh">
-        <Header />
+        <Header/>
         <Container
             component="main"
             maxWidth="md"
-            sx={{ flexGrow: 1, pt: '96px', pb: 2 }}
+            sx={{flexGrow: 1, pb: 2}}
         >
+            <Toolbar/>
             {children}
         </Container>
-        <Footer />
+        <Footer/>
     </Box>
 );
 
