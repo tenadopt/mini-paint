@@ -9,7 +9,6 @@ import { db } from 'firebaseConfig';
 import { useAppSelector } from 'shared/hooks/hooks';
 import { selectAuth } from 'features/auth/model/authSlice';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import CanvasEditor, { CanvasEditorHandle } from 'features/imageEditor/ui/CanvasEditor';
 
 const workSchema = z.object({
@@ -76,14 +75,13 @@ const ImageEditorPage = () => {
                 setLoadImage(true);
             } catch (err) {
                 toast.error('Failed to load work');
-                console.error('Failed to load work:', err);
                 setError('Failed to load work');
             } finally {
                 setLoading(false);
             }
         };
 
-        loadWork().catch(console.error);
+        loadWork();
     }, [workId, userId, setValue]);
 
     const onSubmit: SubmitHandler<WorkFormValues> = async (data) => {
@@ -111,7 +109,6 @@ const ImageEditorPage = () => {
 
             navigate('/');
         } catch (err) {
-            console.error('Failed to save work:', err);
             setError('Failed to save work');
             toast.error('Failed to save work');
         } finally {

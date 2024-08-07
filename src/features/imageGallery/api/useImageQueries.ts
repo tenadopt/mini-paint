@@ -8,7 +8,6 @@ export const useFetchImages = (userId?: string) => {
         queryFn: () => fetchImages(userId),
         enabled: !!userId,
         onError: (error: Error) => {
-            console.error('Error fetching images:', error);
             toast.error(`Failed to load images: ${error.message}`);
         },
     } as UseQueryOptions<Image[], Error>);
@@ -16,28 +15,28 @@ export const useFetchImages = (userId?: string) => {
 
 export const useSaveImage = () => {
     const queryClient = useQueryClient();
+
     return useMutation<string, Error, string>({
         mutationFn: saveImageToFirebase,
         onSuccess: async () => {
             await queryClient.invalidateQueries({queryKey: ['images']});
         },
         onError: (error: Error) => {
-            console.error('Error saving image:', error);
-            toast.error('Failed to save image');
+            toast.error(`Failed to save image: ${error.message}`);
         },
     });
 };
 
 export const useDeleteImage = () => {
     const queryClient = useQueryClient();
+
     return useMutation<void, Error, string>({
         mutationFn: deleteImage,
         onSuccess: async () => {
             await queryClient.invalidateQueries({queryKey: ['images']});
         },
         onError: (error: Error) => {
-            console.error('Error deleting image:', error);
-            toast.error('Failed to delete image');
+            toast.error(`Failed to delete image: ${error.message}`);
         },
     });
 };
