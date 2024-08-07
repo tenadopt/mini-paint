@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction, createAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface ImageEditorSettings {
     brushSize: number;
@@ -36,9 +36,6 @@ const imageEditorSlice = createSlice({
         },
     },
 });
-
-export const setBrushSizeWithState = createAction<SetBrushSizePayload>('imageEditor/setBrushSizeWithState');
-export const setColorWithState = createAction<SetColorPayload>('imageEditor/setColorWithState');
 
 export const { setBrushSize, setColor } = imageEditorSlice.actions;
 export default imageEditorSlice.reducer;

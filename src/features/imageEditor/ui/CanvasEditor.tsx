@@ -4,7 +4,7 @@ import { RootState } from 'app/store';
 import {
     Slider, TextField, Container, Box, Select, MenuItem, InputLabel, FormControl, SelectChangeEvent,
 } from '@mui/material';
-import { setBrushSizeWithState, setColorWithState } from 'features/imageEditor/model/imageEditorSlice';
+import { setBrushSize, setColor } from 'features/imageEditor/model/imageEditorSlice';
 import { useSaveImage } from 'features/imageGallery/api/useImageQueries';
 import { toast, ToastContainer } from 'react-toastify';
 
@@ -31,12 +31,28 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
     const [shape, setShape] = useState<ShapeType>('line');
     const [startPosition, setStartPosition] = useState<{ x: number; y: number } | null>(null);
     const saveImageMutation = useSaveImage();
+    const imageRef = useRef<HTMLImageElement | null>(null);
 
     useImperativeHandle(ref, () => ({
         getCanvasDataUrl,
         saveCanvas,
         clearCanvas,
     }));
+
+    const updateCanvasContext = () => {
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext('2d');
+
+        if (canvas && context) {
+            const savedData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+            context.lineCap = 'round';
+            context.strokeStyle = settings.color;
+            context.lineWidth = settings.brushSize;
+            contextRef.current = context;
+            context.putImageData(savedData, 0, 0);
+        }
+    };
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -48,15 +64,8 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
         canvas.style.width = `${window.innerHeight * 0.8}px`;
         canvas.style.height = `${window.innerHeight * 0.8}px`;
 
-        const context = canvas.getContext('2d');
-
-        if (!context) return;
-
-        context.lineCap = 'round';
-        context.strokeStyle = settings.color;
-        context.lineWidth = settings.brushSize;
-        contextRef.current = context;
-    }, [settings.brushSize, settings.color]);
+        updateCanvasContext();
+    }, []);
 
     useEffect(() => {
         if (loadImage && imageUrl) {
@@ -71,8 +80,9 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
                     img.crossOrigin = 'anonymous';
                     img.src = imageUrl;
+
                     img.onload = () => {
-                        context.clearRect(0, 0, canvas.width, canvas.height);
+                        imageRef.current = img;
                         drawImageToFitCanvas(img);
                     };
                     img.onerror = () => {
@@ -86,6 +96,10 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
             loadImageToCanvas();
         }
     }, [imageUrl, loadImage]);
+
+    useEffect(() => {
+        updateCanvasContext();
+    }, [settings.brushSize, settings.color]);
 
     const drawImageToFitCanvas = (img: HTMLImageElement) => {
         const canvas = canvasRef.current;
@@ -115,6 +129,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
             yStart = 0;
         }
 
+        context.clearRect(0, 0, canvas.width, canvas.height);
         context.drawImage(img, xStart, yStart, renderableWidth, renderableHeight);
     };
 
@@ -169,6 +184,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
         if (canvas && context) {
             context.clearRect(0, 0, canvas.width, canvas.height);
+            imageRef.current = null;
         }
     };
 
@@ -271,14 +287,14 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
         context.stroke();
     };
 
-    const handleBrushSizeChange = (_: Event, newValue: number | number[]) => {
+    const handleBrushSizeChange = (_: unknown, newValue: number | number[]) => {
         if (typeof newValue === 'number') {
-            dispatch(setBrushSizeWithState({ brushSize: newValue }));
+            dispatch(setBrushSize({ brushSize: newValue }));
         }
     };
 
     const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        dispatch(setColorWithState({ color: event.target.value }));
+        dispatch(setColor({ color: event.target.value }));
     };
 
     const handleShapeChange = (event: SelectChangeEvent) => {
@@ -287,8 +303,8 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
     useEffect(() => {
         return () => {
-            dispatch(setBrushSizeWithState({ brushSize: 1 }));
-            dispatch(setColorWithState({ color: '#000000' }));
+            dispatch(setBrushSize({ brushSize: 1 }));
+            dispatch(setColor({ color: '#000000' }));
         };
     }, [dispatch]);
 
