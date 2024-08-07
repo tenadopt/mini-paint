@@ -20,7 +20,6 @@ const Header = () => {
                         Mini Paint Editor
                     </Button>
                 </Box>
-                <Box display="flex" gap={2}>
                     {!auth.userId ? (
                         <>
                             <Button color="inherit" onClick={() => navigate('/signin')}>
@@ -36,7 +35,6 @@ const Header = () => {
                             <LogoutButton/>
                         </Box>
                     )}
-                </Box>
             </Toolbar>
         </AppBar>
     );
