@@ -87,16 +87,14 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       canvas.style.height = `${window.innerHeight * 0.8}px`;
 
       updateCanvasContext();
-    }, []);
 
-    useEffect(() => {
       setSearchParams({
-        ...Object.fromEntries(searchParams.entries()),
-        shape,
-        color,
-        brushSize: brushSize.toString(),
-      });
-    }, [shape, color, brushSize]);
+            ...Object.fromEntries(searchParams.entries()),
+            shape,
+            color,
+            brushSize: brushSize.toString(),
+        });
+    }, []);
 
     useEffect(() => {
       if (loadImage && imageUrl) {
