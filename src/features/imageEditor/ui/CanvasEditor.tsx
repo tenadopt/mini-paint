@@ -1,12 +1,10 @@
-import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from 'app/store';
+import React, {useRef, useState, useEffect, forwardRef, useImperativeHandle} from 'react';
+import {useSearchParams} from 'react-router-dom';
 import {
     Slider, TextField, Container, Box, Select, MenuItem, InputLabel, FormControl, SelectChangeEvent,
 } from '@mui/material';
-import { setBrushSize, setColor } from 'features/imageEditor/model/imageEditorSlice';
-import { useSaveImage } from 'features/imageGallery/api/useImageQueries';
-import { toast, ToastContainer } from 'react-toastify';
+import {useSaveImage} from 'features/imageGallery/api/useImageQueries';
+import {toast, ToastContainer} from 'react-toastify';
 
 type ShapeType = 'line' | 'star' | 'polygon' | 'circle' | 'rectangle';
 
@@ -22,16 +20,18 @@ export interface CanvasEditorHandle {
     clearCanvas: () => void;
 }
 
-const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageUrl, onSave, loadImage }, ref) => {
-    const dispatch = useDispatch();
-    const settings = useSelector((state: RootState) => state.imageEditor.settings);
+const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({imageUrl, onSave, loadImage}, ref) => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const contextRef = useRef<CanvasRenderingContext2D | null>(null);
     const [isDrawing, setIsDrawing] = useState(false);
-    const [shape, setShape] = useState<ShapeType>('line');
+    const [shape, setShape] = useState<ShapeType>(searchParams.get('tool') as ShapeType || 'line');
     const [startPosition, setStartPosition] = useState<{ x: number; y: number } | null>(null);
     const saveImageMutation = useSaveImage();
     const imageRef = useRef<HTMLImageElement | null>(null);
+
+    const color = searchParams.get('color') || '#000000';
+    const brushSize = parseInt(searchParams.get('sizeBrush') || '5', 10);
 
     useImperativeHandle(ref, () => ({
         getCanvasDataUrl,
@@ -47,8 +47,8 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
             const savedData = context.getImageData(0, 0, canvas.width, canvas.height);
 
             context.lineCap = 'round';
-            context.strokeStyle = settings.color;
-            context.lineWidth = settings.brushSize;
+            context.strokeStyle = color;
+            context.lineWidth = brushSize;
             contextRef.current = context;
             context.putImageData(savedData, 0, 0);
         }
@@ -65,6 +65,9 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
         canvas.style.height = `${window.innerHeight * 0.8}px`;
 
         updateCanvasContext();
+
+        setSearchParams({...Object.fromEntries(searchParams.entries()), tool: shape, color, sizeBrush: brushSize.toString() });
+
     }, []);
 
     useEffect(() => {
@@ -99,7 +102,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
     useEffect(() => {
         updateCanvasContext();
-    }, [settings.brushSize, settings.color]);
+    }, [brushSize, color]);
 
     const drawImageToFitCanvas = (img: HTMLImageElement) => {
         const canvas = canvasRef.current;
@@ -138,9 +141,9 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
     };
 
     const startDrawing = (event: React.MouseEvent<HTMLCanvasElement>) => {
-        const { offsetX, offsetY } = event.nativeEvent;
+        const {offsetX, offsetY} = event.nativeEvent;
 
-        setStartPosition({ x: offsetX, y: offsetY });
+        setStartPosition({x: offsetX, y: offsetY});
         setIsDrawing(true);
         contextRef.current?.beginPath();
         contextRef.current?.moveTo(offsetX, offsetY);
@@ -149,7 +152,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
     const finishDrawing = (event: React.MouseEvent<HTMLCanvasElement>) => {
         if (!isDrawing || !startPosition) return;
 
-        const { offsetX, offsetY } = event.nativeEvent;
+        const {offsetX, offsetY} = event.nativeEvent;
 
         if (shape === 'star') {
             drawStar(startPosition.x, startPosition.y, offsetX, offsetY);
@@ -169,7 +172,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
     const draw = (event: React.MouseEvent<HTMLCanvasElement>) => {
         if (!isDrawing || shape !== 'line') return;
 
-        const { offsetX, offsetY } = event.nativeEvent;
+        const {offsetX, offsetY} = event.nativeEvent;
         const context = contextRef.current;
 
         if (context) {
@@ -289,30 +292,24 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
     const handleBrushSizeChange = (_: unknown, newValue: number | number[]) => {
         if (typeof newValue === 'number') {
-            dispatch(setBrushSize({ brushSize: newValue }));
+            setSearchParams({...Object.fromEntries(searchParams.entries()), sizeBrush: newValue.toString()});
         }
     };
 
     const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        dispatch(setColor({ color: event.target.value }));
+        setSearchParams({...Object.fromEntries(searchParams.entries()), color: event.target.value});
     };
 
     const handleShapeChange = (event: SelectChangeEvent) => {
         setShape(event.target.value as ShapeType);
+        setSearchParams({...Object.fromEntries(searchParams.entries()), tool: event.target.value});
     };
-
-    useEffect(() => {
-        return () => {
-            dispatch(setBrushSize({ brushSize: 1 }));
-            dispatch(setColor({ color: '#000000' }));
-        };
-    }, [dispatch]);
 
     return (
         <Container>
-            <ToastContainer />
+            <ToastContainer/>
             <Box display="flex" mt={2}>
-                <FormControl variant="outlined" style={{ minWidth: 120 }}>
+                <FormControl variant="outlined" style={{minWidth: 120}}>
                     <InputLabel>Shape</InputLabel>
                     <Select
                         value={shape}
@@ -328,19 +325,19 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
                 </FormControl>
                 <TextField
                     type="color"
-                    value={settings.color}
+                    value={color}
                     onChange={handleColorChange}
                     label="Brush Color"
                     variant="outlined"
                     margin="normal"
                 />
                 <Slider
-                    value={settings.brushSize}
+                    value={brushSize}
                     onChange={(_, newValue) => handleBrushSizeChange(_, newValue)}
                     min={1}
                     max={50}
                     valueLabelDisplay="auto"
-                    style={{ width: 200, margin: '0 20px' }}
+                    style={{width: 200, margin: '0 20px'}}
                 />
             </Box>
             <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center">
@@ -350,7 +347,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
                     onMouseUp={finishDrawing}
                     onMouseMove={draw}
                     onMouseLeave={finishDrawing}
-                    style={{ border: '1px solid #000' }}
+                    style={{border: '1px solid #000'}}
                 />
             </Box>
         </Container>

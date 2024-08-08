@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Box, Container, TextField, Button, Typography, CircularProgress } from '@mui/material';
 import { useForm, SubmitHandler, FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { doc, getDoc, addDoc, updateDoc, collection, DocumentReference } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
-import { useAppSelector } from 'shared/hooks/hooks';
-import { selectAuth } from 'features/auth/model/authSlice';
 import { toast } from 'react-toastify';
 import CanvasEditor, { CanvasEditorHandle } from 'features/imageEditor/ui/CanvasEditor';
+import {useAppSelector} from "shared/hooks/hooks";
 
 const workSchema = z.object({
     title: z.string().min(1, 'Title is required'),
@@ -26,7 +25,7 @@ interface Work extends WorkFormValues {
 const ImageEditorPage = () => {
     const { workId } = useParams<{ workId: string }>();
     const navigate = useNavigate();
-    const { userId } = useAppSelector(selectAuth);
+    const location = useLocation();
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<WorkFormValues>({
         resolver: zodResolver(workSchema),
     });
@@ -35,6 +34,17 @@ const ImageEditorPage = () => {
     const [imageUrl, setImageUrl] = useState<string>('');
     const [loadImage, setLoadImage] = useState<boolean>(false);
     const canvasEditorRef = useRef<CanvasEditorHandle | null>(null);
+    const userId = useAppSelector((state) => state.auth.userId);
+
+    const getQueryParams = () => {
+        const searchParams = new URLSearchParams(location.search);
+
+        return {
+            tool: searchParams.get('tool'),
+            color: searchParams.get('color'),
+            sizeBrush: searchParams.get('sizeBrush'),
+        };
+    };
 
     useEffect(() => {
         const loadWork = async () => {
@@ -59,13 +69,6 @@ const ImageEditorPage = () => {
 
                 const work = docSnap.data() as Work;
 
-                if (work.userId !== userId) {
-                    toast.error('Work not found or you do not have access');
-                    setLoading(false);
-
-                    return;
-                }
-
                 const { title, description, imageUrl } = work;
 
                 setValue('title', title);
@@ -82,11 +85,9 @@ const ImageEditorPage = () => {
         };
 
         loadWork();
-    }, [workId, userId, setValue]);
+    }, [workId, setValue]);
 
     const onSubmit: SubmitHandler<WorkFormValues> = async (data) => {
-        if (!userId) return;
-
         setLoading(true);
         try {
             if (canvasEditorRef.current) {
@@ -119,6 +120,8 @@ const ImageEditorPage = () => {
     const handleClearCanvas = () => {
         canvasEditorRef.current?.clearCanvas();
     };
+
+    const queryParams = getQueryParams();
 
     if (loading) {
         return (
@@ -166,7 +169,7 @@ const ImageEditorPage = () => {
                 </Button>
             </Box>
             <Box mt={4}>
-                <CanvasEditor ref={canvasEditorRef} imageUrl={imageUrl} onSave={setImageUrl} loadImage={loadImage} />
+                <CanvasEditor ref={canvasEditorRef} imageUrl={imageUrl} onSave={setImageUrl} loadImage={loadImage} {...queryParams} />
             </Box>
         </Container>
     );
