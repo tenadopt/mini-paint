@@ -53,7 +53,7 @@ export const signUp = createAsyncThunk<AuthResponse, AuthCredentials, { rejectVa
     'auth/signUp',
     async (credentials, thunkAPI) => {
         try {
-            const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
+            const userCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
             const token = await userCredential.user.getIdToken();
             const email = userCredential.user.email ?? "";
 
