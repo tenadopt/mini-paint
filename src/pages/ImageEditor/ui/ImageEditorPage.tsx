@@ -39,6 +39,7 @@ interface Work extends WorkFormValues {
 }
 
 const ImageEditorPage = () => {
+
   const { workId } = useParams<{ workId: string }>();
   const navigate = useNavigate();
   const {
@@ -76,6 +77,7 @@ const ImageEditorPage = () => {
 
           return;
         }
+
 
         const work = docSnap.data() as Work;
 

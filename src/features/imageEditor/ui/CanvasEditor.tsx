@@ -37,6 +37,7 @@ export interface CanvasEditorHandle {
 const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
   ({ imageUrl, onSave, loadImage }, ref) => {
     const [searchParams, setSearchParams] = useSearchParams();
+
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const contextRef = useRef<CanvasRenderingContext2D | null>(null);
     const [isDrawing, setIsDrawing] = useState(false);
@@ -173,6 +174,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     };
 
     const finishDrawing = (event: React.MouseEvent<HTMLCanvasElement>) => {
+      
       if (!isDrawing || !startPosition) return;
 
       const { offsetX, offsetY } = event.nativeEvent;
