@@ -1,34 +1,33 @@
-import React, { memo } from "react";
+import React, { useState } from "react";
 import { useAppSelector } from "shared/hooks/hooks";
-import {
-  useFetchImages,
-  useDeleteImage,
-} from "features/imageGallery/api/useImageQueries";
+import { useFetchImages, useDeleteImage } from "features/imageGallery/api/api";
 import {
   Button,
   CircularProgress,
   Container,
-  Grid,
-  Card,
-  CardMedia,
-  CardContent,
   Typography,
-  IconButton,
   Box,
 } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
+import VirtualizedImageList from "entities/image/VirtualizedImageList";
 
-const ImageFeedPage = memo(() => {
+const ImageFeedPage = () => {
+  const [page, setPage] = useState(1);
   const userId = useAppSelector((state) => state.auth.userId);
   const {
     data: images = [],
     error,
     isLoading,
-  } = useFetchImages(userId || undefined);
+  } = useFetchImages(userId || undefined, page);
   const deleteImageMutation = useDeleteImage();
   const navigate = useNavigate();
+
+  const handleNextPage = () => setPage((prevPage) => prevPage + 1);
+  const handlePrevPage = () => setPage((prevPage) => Math.max(prevPage - 1, 1));
+
+  const limitPerPage = 15;
+  const hasNextPage = images.length === limitPerPage;
 
   const handleDelete = (id: string) => {
     deleteImageMutation.mutate(id, {
@@ -85,56 +84,34 @@ const ImageFeedPage = memo(() => {
         Create Image
       </Button>
       {images.length > 0 ? (
-        <Grid container spacing={2} mt={2}>
-          {images.map((image) => (
-            <Grid item xs={12} sm={6} md={4} key={image.id}>
-              <Card
-                onClick={() => handleEdit(image.id)}
-                style={{ cursor: "pointer" }}
-              >
-                {image.imageUrl ? (
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={image.imageUrl}
-                    alt={image.title}
-                    sx={{ maxHeight: "200px", objectFit: "cover" }}
-                  />
-                ) : (
-                  <CardContent>
-                    <Typography variant="h6">Image not available</Typography>
-                  </CardContent>
-                )}
-                <CardContent
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Box>
-                    <Typography variant="h6">{image.title}</Typography>
-                    <Typography variant="body2">{image.description}</Typography>
-                  </Box>
-                  <IconButton
-                    aria-label="delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(image.id);
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+        <>
+          <VirtualizedImageList
+            images={images}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+          <Box display="flex" justifyContent="space-between" mt={2}>
+            <Button
+              variant="contained"
+              onClick={handlePrevPage}
+              disabled={page === 1}
+            >
+              Previous Page
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleNextPage}
+              disabled={!hasNextPage}
+            >
+              Next Page
+            </Button>
+          </Box>
+        </>
       ) : (
         <Typography mt={2}>No images yet.</Typography>
       )}
     </Container>
   );
-});
+};
 
 export default ImageFeedPage;
