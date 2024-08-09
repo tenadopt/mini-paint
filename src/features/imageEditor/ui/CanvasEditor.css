@@ -1,0 +1,26 @@
+.container-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.center-box {
+  min-width: 120px;
+}
+
+.controls {
+  min-width: 120px;
+  margin: 0;
+}
+
+.slider {
+  width: 200px;
+  margin: 0;
+}
+
+.canvas {
+  border: 1px solid #000;
+  margin-top: 10px;
+}

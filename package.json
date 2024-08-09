@@ -9,6 +9,7 @@
     "start": "webpack serve --config webpack.config.ts",
     "lint": "eslint . --ext .ts,.tsx --config .eslintrc",
     "prepare": "husky install",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:deploy": "env-cmd -f .env npm run build && firebase deploy -P mini-paint-65d68"
   },
