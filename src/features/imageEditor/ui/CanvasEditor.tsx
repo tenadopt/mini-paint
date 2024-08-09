@@ -14,6 +14,7 @@ interface CanvasEditorProps {
     imageUrl?: string;
     onSave: (url: string) => void;
     loadImage: boolean;
+    onEdit: (edited: boolean) => void;
 }
 
 export interface CanvasEditorHandle {
@@ -22,7 +23,7 @@ export interface CanvasEditorHandle {
     clearCanvas: () => void;
 }
 
-const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageUrl, onSave, loadImage }, ref) => {
+const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageUrl, onSave, loadImage, onEdit }, ref) => {
     const dispatch = useDispatch();
     const settings = useSelector((state: RootState) => state.imageEditor.settings);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -163,6 +164,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
 
         setIsDrawing(false);
         setStartPosition(null);
+        onEdit(true);
         contextRef.current?.closePath();
     };
 
@@ -175,6 +177,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
         if (context) {
             context.lineTo(offsetX, offsetY);
             context.stroke();
+            onEdit(true);
         }
     };
 
@@ -186,6 +189,8 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(({ imageU
             context.clearRect(0, 0, canvas.width, canvas.height);
             imageRef.current = null;
         }
+
+        onEdit(false);
     };
 
     const saveCanvas = async () => {
