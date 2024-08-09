@@ -5,8 +5,9 @@ import {
     Slider, TextField, Container, Box, Select, MenuItem, InputLabel, FormControl, SelectChangeEvent,
 } from '@mui/material';
 import { setBrushSize, setColor } from 'features/imageEditor/model/imageEditorSlice';
-import { useSaveImage } from 'features/imageGallery/api/useImageQueries';
+import { useSaveImage } from 'features/imageGallery/api/api';
 import { toast, ToastContainer } from 'react-toastify';
+
 
 type ShapeType = 'line' | 'star' | 'polygon' | 'circle' | 'rectangle';
 

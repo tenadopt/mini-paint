@@ -1,7 +1,9 @@
-import { collection, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, deleteDoc, doc, limit, startAfter } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
+import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { db } from 'firebaseConfig';
 import { toast } from 'react-toastify';
+
 
 export interface Image {
     id: string;
@@ -12,23 +14,27 @@ export interface Image {
     createdAt?: Date;
 }
 
-export const fetchImages = async (userId?: string): Promise<Image[]> => {
+export const fetchImages = async (userId?: string, page = 1, limitPerPage = 15): Promise<Image[]> => {
     try {
         const imagesCollection = collection(db, 'works');
-        const q = userId
-            ? query(imagesCollection, where('userId', '==', userId))
-            : query(imagesCollection);
+        let q = userId
+            ? query(imagesCollection, where('userId', '==', userId), limit(limitPerPage))
+            : query(imagesCollection, limit(limitPerPage));
+
+        if (page > 1) {
+            const lastDocSnapShot = await getDocs(q);
+            const lastVisible = lastDocSnapShot.docs[lastDocSnapShot.docs.length-1];
+
+            q = query(q, startAfter(lastVisible))
+        }
+
         const querySnapshot = await getDocs(q);
 
-        const images = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-
-            return {
-                id: doc.id,
-                ...(data as Omit<Image, 'id'>),
-                createdAt: data.createdAt?.toDate()
-            };
-        });
+        const images = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...(doc.data() as Omit<Image, 'id'>),
+            createdAt: doc.data().createdAt?.toDate()
+        }));
 
         return images;
     } catch (error: unknown) {
@@ -83,4 +89,43 @@ export const deleteImage = async (id: string, imageUrl?: string): Promise<void> 
             throw new Error('Failed to delete image: unknown error');
         }
     }
+};
+
+export const useFetchImages = (userId?: string, page = 1, limitPage = 15) => {
+    return useQuery<Image[], Error>({
+        queryKey: ['images', userId, page],
+        queryFn: () => fetchImages(userId, page, limitPage),
+        enabled: !!userId,
+        onError: (error: Error) => {
+            toast.error(`Failed to load images: ${error.message}`);
+        },
+    } as UseQueryOptions<Image[], Error>);
+};
+
+export const useSaveImage = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation<string, Error, string>({
+        mutationFn: saveImageToFirebase,
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({queryKey: ['images']});
+        },
+        onError: (error: Error) => {
+            toast.error(`Failed to save image: ${error.message}`);
+        },
+    });
+};
+
+export const useDeleteImage = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation<void, Error, string>({
+        mutationFn: deleteImage,
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({queryKey: ['images']});
+        },
+        onError: (error: Error) => {
+            toast.error(`Failed to delete image: ${error.message}`);
+        },
+    });
 };
