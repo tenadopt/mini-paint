@@ -4,6 +4,7 @@ import React, {
   useEffect,
   forwardRef,
   useImperativeHandle,
+  useCallback,
 } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -89,42 +90,38 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       updateCanvasContext();
 
       setSearchParams({
-            ...Object.fromEntries(searchParams.entries()),
-            shape,
-            color,
-            brushSize: brushSize.toString(),
-        });
+        ...Object.fromEntries(searchParams.entries()),
+        shape,
+        color,
+        brushSize: brushSize.toString(),
+      });
+    }, []);
+
+    const loadImageToCanvas = useCallback((imageUrl: string) => {
+      const canvas = canvasRef.current;
+      const context = contextRef.current;
+
+      if (!canvas || !context) return;
+
+      const img = new Image();
+
+      img.crossOrigin = "anonymous";
+      img.src = imageUrl;
+
+      img.onload = () => {
+        imageRef.current = img;
+        drawImageToFitCanvas(img);
+      };
+      img.onerror = () => {
+        toast.error("Failed to load image");
+      };
     }, []);
 
     useEffect(() => {
       if (loadImage && imageUrl) {
-        const loadImageToCanvas = async () => {
-          try {
-            const canvas = canvasRef.current;
-            const context = contextRef.current;
-
-            if (!canvas || !context) return;
-
-            const img = new Image();
-
-            img.crossOrigin = "anonymous";
-            img.src = imageUrl;
-
-            img.onload = () => {
-              imageRef.current = img;
-              drawImageToFitCanvas(img);
-            };
-            img.onerror = () => {
-              toast.error("Failed to load image");
-            };
-          } catch (error) {
-            toast.error("Error loading image");
-          }
-        };
-
-        loadImageToCanvas();
+        loadImageToCanvas(imageUrl);
       }
-    }, [imageUrl, loadImage]);
+    }, [imageUrl, loadImage, loadImageToCanvas]);
 
     useEffect(() => {
       updateCanvasContext();
@@ -327,28 +324,37 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       context.stroke();
     };
 
-    const handleShapeChange = (event: SelectChangeEvent) => {
-      setSearchParams({
-        ...Object.fromEntries(searchParams.entries()),
-        shape: event.target.value,
-      });
-    };
-
-    const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchParams({
-        ...Object.fromEntries(searchParams.entries()),
-        color: event.target.value,
-      });
-    };
-
-    const handleBrushSizeChange = (_: unknown, newValue: number | number[]) => {
-      if (typeof newValue === "number") {
+    const handleShapeChange = useCallback(
+      (event: SelectChangeEvent) => {
         setSearchParams({
           ...Object.fromEntries(searchParams.entries()),
-          brushSize: newValue.toString(),
+          shape: event.target.value,
         });
-      }
-    };
+      },
+      [setSearchParams],
+    );
+
+    const handleColorChange = useCallback(
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchParams({
+          ...Object.fromEntries(searchParams.entries()),
+          color: event.target.value,
+        });
+      },
+      [setSearchParams],
+    );
+
+    const handleBrushSizeChange = useCallback(
+      (_: unknown, newValue: number | number[]) => {
+        if (typeof newValue === "number") {
+          setSearchParams({
+            ...Object.fromEntries(searchParams.entries()),
+            brushSize: newValue.toString(),
+          });
+        }
+      },
+      [setSearchParams],
+    );
 
     return (
       <Container>
