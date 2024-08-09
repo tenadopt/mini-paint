@@ -124,10 +124,6 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       }
     }, [imageUrl, loadImage, loadImageToCanvas]);
 
-    useEffect(() => {
-      updateCanvasContext();
-    }, [brushSize, color]);
-
     const drawImageToFitCanvas = (img: HTMLImageElement) => {
       const canvas = canvasRef.current;
       const context = contextRef.current;
@@ -338,10 +334,18 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
 
     const handleColorChange = useCallback(
       (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newColor = event.target.value;
+
         setSearchParams({
           ...Object.fromEntries(searchParams.entries()),
           color: event.target.value,
         });
+
+        const context = contextRef.current;
+
+        if (context) {
+          context.strokeStyle = newColor;
+        }
       },
       [setSearchParams],
     );
@@ -353,6 +357,12 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
             ...Object.fromEntries(searchParams.entries()),
             brushSize: newValue.toString(),
           });
+
+          const context = contextRef.current;
+
+          if (context) {
+            context.lineWidth = newValue;
+          }
         }
       },
       [setSearchParams],
