@@ -8,7 +8,6 @@ import React, {
 } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
-  Slider,
   TextField,
   Container,
   Box,
@@ -21,6 +20,7 @@ import {
 import { useSaveImage } from "features/imageGallery/api/useImageQueries";
 import { toast, ToastContainer } from "react-toastify";
 import "./CanvasEditor.css";
+import CustomSlider from "shared/ui/CustomSlider";
 
 interface CanvasEditorProps {
   imageUrl?: string;
@@ -350,23 +350,23 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       [setSearchParams],
     );
 
-    const handleBrushSizeChange = useCallback(
-      (_: unknown, newValue: number | number[]) => {
-        if (typeof newValue === "number") {
-          setSearchParams({
-            ...Object.fromEntries(searchParams.entries()),
-            brushSize: newValue.toString(),
-          });
-
-          const context = contextRef.current;
-
-          if (context) {
-            context.lineWidth = newValue;
-          }
-        }
-      },
-      [setSearchParams],
-    );
+    // const handleBrushSizeChange = useCallback(
+    //   (_: unknown, newValue: number | number[]) => {
+    //     if (typeof newValue === "number") {
+    //       setSearchParams({
+    //         ...Object.fromEntries(searchParams.entries()),
+    //         brushSize: newValue.toString(),
+    //       });
+    //
+    //       const context = contextRef.current;
+    //
+    //       if (context) {
+    //         context.lineWidth = newValue;
+    //       }
+    //     }
+    //   },
+    //   [setSearchParams],
+    // );
 
     return (
       <Container>
@@ -391,14 +391,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
             margin="normal"
             className="controls"
           />
-          <Slider
-            value={brushSize}
-            onChange={(_, newValue) => handleBrushSizeChange(_, newValue)}
-            min={1}
-            max={50}
-            valueLabelDisplay="auto"
-            className="slider"
-          />
+          <CustomSlider />
         </Box>
         <Box
           display="flex"
