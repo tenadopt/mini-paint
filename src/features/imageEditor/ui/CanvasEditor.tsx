@@ -170,7 +170,6 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     };
 
     const finishDrawing = (event: React.MouseEvent<HTMLCanvasElement>) => {
-      
       if (!isDrawing || !startPosition) return;
 
       const { offsetX, offsetY } = event.nativeEvent;
@@ -329,7 +328,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
           shape: event.target.value,
         });
       },
-      [setSearchParams],
+      [searchParams, setSearchParams],
     );
 
     const handleColorChange = useCallback(
@@ -347,26 +346,8 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
           context.strokeStyle = newColor;
         }
       },
-      [setSearchParams],
+      [searchParams, setSearchParams],
     );
-
-    // const handleBrushSizeChange = useCallback(
-    //   (_: unknown, newValue: number | number[]) => {
-    //     if (typeof newValue === "number") {
-    //       setSearchParams({
-    //         ...Object.fromEntries(searchParams.entries()),
-    //         brushSize: newValue.toString(),
-    //       });
-    //
-    //       const context = contextRef.current;
-    //
-    //       if (context) {
-    //         context.lineWidth = newValue;
-    //       }
-    //     }
-    //   },
-    //   [setSearchParams],
-    // );
 
     return (
       <Container>

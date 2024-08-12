@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, memo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -38,8 +38,7 @@ interface Work extends WorkFormValues {
   userId: string;
 }
 
-const ImageEditorPage = () => {
-
+const ImageEditorPage = memo(() => {
   const { workId } = useParams<{ workId: string }>();
   const navigate = useNavigate();
   const {
@@ -77,7 +76,6 @@ const ImageEditorPage = () => {
 
           return;
         }
-
 
         const work = docSnap.data() as Work;
 
@@ -197,6 +195,6 @@ const ImageEditorPage = () => {
       </Box>
     </Container>
   );
-};
+});
 
 export default ImageEditorPage;

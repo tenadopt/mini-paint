@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { useAppSelector } from "shared/hooks/hooks";
 import {
   useFetchImages,
@@ -20,7 +20,7 @@ import { ToastContainer, toast } from "react-toastify";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
 
-const ImageFeedPage = () => {
+const ImageFeedPage = memo(() => {
   const userId = useAppSelector((state) => state.auth.userId);
   const {
     data: images = [],
@@ -135,6 +135,6 @@ const ImageFeedPage = () => {
       )}
     </Container>
   );
-};
+});
 
 export default ImageFeedPage;
