@@ -14,6 +14,7 @@ interface Configuration extends WebpackConfiguration {
 
 const config: Configuration = {
   mode: process.env.NODE_ENV === "production" ? "production" : "development",
+  devtool: process.env.NODE_ENV === "production" ? false : "source-map",
   entry: "./src/app/index.tsx",
   output: {
     path: path.resolve(__dirname, "dist"),
@@ -47,6 +48,7 @@ const config: Configuration = {
     new webpack.DefinePlugin({
       "process.env": JSON.stringify(process.env),
     }),
+    new webpack.HotModuleReplacementPlugin(),
   ],
   devServer: {
     static: {
@@ -56,6 +58,7 @@ const config: Configuration = {
     port: 3000,
     historyApiFallback: true,
     open: true,
+    hot: true,
   },
 };
 

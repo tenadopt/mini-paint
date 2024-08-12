@@ -7,20 +7,13 @@ import React, {
   useCallback,
 } from "react";
 import { useSearchParams } from "react-router-dom";
-import {
-  TextField,
-  Container,
-  Box,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  SelectChangeEvent,
-} from "@mui/material";
+import { Container, Box } from "@mui/material";
 import { useSaveImage } from "features/imageGallery/api/useImageQueries";
 import { toast, ToastContainer } from "react-toastify";
 import "./CanvasEditor.css";
-import CustomSlider from "shared/ui/CustomSlider";
+import BrushSizeSlider from "shared/ui/BrushSizeSlider";
+import ColorPicker from "shared/ui/ColorPicker";
+import ShapeSelector from "shared/ui/ShapeSelector";
 
 interface CanvasEditorProps {
   imageUrl?: string;
@@ -47,6 +40,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     } | null>(null);
     const saveImageMutation = useSaveImage();
     const imageRef = useRef<HTMLImageElement | null>(null);
+    const savedDataRef = useRef<ImageData | null>(null);
 
     const shape = searchParams.get("shape") || "line";
     const color = searchParams.get("color") || "#000000";
@@ -58,25 +52,21 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       clearCanvas,
     }));
 
-    const updateCanvasContext = () => {
+    const updateCanvasContext = useCallback(() => {
       const canvas = canvasRef.current;
       const context = canvas?.getContext("2d");
 
       if (canvas && context) {
-        const savedData = context.getImageData(
-          0,
-          0,
-          canvas.width,
-          canvas.height,
-        );
+        if (savedDataRef.current) {
+          context.putImageData(savedDataRef.current, 0, 0);
+        }
 
         context.lineCap = "round";
         context.strokeStyle = color;
         context.lineWidth = brushSize;
         contextRef.current = context;
-        context.putImageData(savedData, 0, 0);
       }
-    };
+    }, [color, brushSize]);
 
     useEffect(() => {
       const canvas = canvasRef.current;
@@ -88,8 +78,6 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       canvas.style.width = `${window.innerHeight * 0.8}px`;
       canvas.style.height = `${window.innerHeight * 0.8}px`;
 
-      updateCanvasContext();
-
       setSearchParams({
         ...Object.fromEntries(searchParams.entries()),
         shape,
@@ -97,6 +85,17 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         brushSize: brushSize.toString(),
       });
     }, []);
+
+    useEffect(() => {
+      savedDataRef.current =
+        contextRef.current?.getImageData(
+          0,
+          0,
+          canvasRef.current?.width || 0,
+          canvasRef.current?.height || 0,
+        ) ?? null;
+      updateCanvasContext();
+    }, [color, brushSize, updateCanvasContext]);
 
     const loadImageToCanvas = useCallback((imageUrl: string) => {
       const canvas = canvasRef.current;
@@ -187,6 +186,15 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       setIsDrawing(false);
       setStartPosition(null);
       contextRef.current?.closePath();
+
+      // Save the canvas state after drawing
+      savedDataRef.current =
+        contextRef.current?.getImageData(
+          0,
+          0,
+          canvasRef.current?.width || 0,
+          canvasRef.current?.height || 0,
+        ) ?? null;
     };
 
     const draw = (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -321,58 +329,13 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       context.stroke();
     };
 
-    const handleShapeChange = useCallback(
-      (event: SelectChangeEvent) => {
-        setSearchParams({
-          ...Object.fromEntries(searchParams.entries()),
-          shape: event.target.value,
-        });
-      },
-      [searchParams, setSearchParams],
-    );
-
-    const handleColorChange = useCallback(
-      (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newColor = event.target.value;
-
-        setSearchParams({
-          ...Object.fromEntries(searchParams.entries()),
-          color: event.target.value,
-        });
-
-        const context = contextRef.current;
-
-        if (context) {
-          context.strokeStyle = newColor;
-        }
-      },
-      [searchParams, setSearchParams],
-    );
-
     return (
       <Container>
         <ToastContainer />
         <Box className="container-box">
-          <FormControl variant="outlined" className="center-box">
-            <InputLabel>Shape</InputLabel>
-            <Select value={shape} onChange={handleShapeChange} label="Shape">
-              <MenuItem value="line">Line</MenuItem>
-              <MenuItem value="star">Star</MenuItem>
-              <MenuItem value="polygon">Polygon</MenuItem>
-              <MenuItem value="circle">Circle</MenuItem>
-              <MenuItem value="rectangle">Rectangle</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            type="color"
-            value={color}
-            onChange={handleColorChange}
-            label="Brush Color"
-            variant="outlined"
-            margin="normal"
-            className="controls"
-          />
-          <CustomSlider />
+          <ShapeSelector />
+          <ColorPicker />
+          <BrushSizeSlider />
         </Box>
         <Box
           display="flex"
