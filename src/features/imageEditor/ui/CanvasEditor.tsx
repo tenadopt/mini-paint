@@ -8,12 +8,12 @@ import React, {
 } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Container, Box } from "@mui/material";
-import { useSaveImage } from "features/imageGallery/api/useImageQueries";
 import { toast, ToastContainer } from "react-toastify";
 import "./CanvasEditor.css";
 import BrushSizeSlider from "shared/ui/BrushSizeSlider";
 import ColorPicker from "shared/ui/ColorPicker";
 import ShapeSelector from "shared/ui/ShapeSelector";
+import { useSaveImage } from "features/imageGallery/api/api";
 
 interface CanvasEditorProps {
   imageUrl?: string;
