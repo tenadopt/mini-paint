@@ -62,11 +62,12 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         }
 
         context.lineCap = "round";
-        context.strokeStyle = color;
-        context.lineWidth = brushSize;
+
+        context.strokeStyle = shape === "line" ? color : `rgba(0, 0, 0, 0.5)`;
+        context.lineWidth = shape === "line" ? brushSize : brushSize / 2;
         contextRef.current = context;
       }
-    }, [color, brushSize]);
+    }, [color, brushSize, shape]);
 
     useEffect(() => {
       const canvas = canvasRef.current;
@@ -95,7 +96,7 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
           canvasRef.current?.height || 0,
         ) ?? null;
       updateCanvasContext();
-    }, [color, brushSize, updateCanvasContext]);
+    }, [color, brushSize, shape, updateCanvasContext]);
 
     const loadImageToCanvas = useCallback((imageUrl: string) => {
       const canvas = canvasRef.current;
@@ -173,6 +174,19 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
 
       const { offsetX, offsetY } = event.nativeEvent;
 
+      if (shape !== "line") {
+        contextRef.current?.clearRect(
+          0,
+          0,
+          canvasRef.current?.width || 0,
+          canvasRef.current?.height || 0,
+        );
+
+        if (savedDataRef.current) {
+          contextRef.current?.putImageData(savedDataRef.current, 0, 0);
+        }
+      }
+
       if (shape === "star") {
         drawStar(startPosition.x, startPosition.y, offsetX, offsetY);
       } else if (shape === "polygon") {
@@ -187,7 +201,6 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       setStartPosition(null);
       contextRef.current?.closePath();
 
-      // Save the canvas state after drawing
       savedDataRef.current =
         contextRef.current?.getImageData(
           0,
@@ -198,14 +211,23 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     };
 
     const draw = (event: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!isDrawing || shape !== "line") return;
+      if (!isDrawing) return;
 
       const { offsetX, offsetY } = event.nativeEvent;
       const context = contextRef.current;
 
-      if (context) {
-        context.lineTo(offsetX, offsetY);
-        context.stroke();
+      if (shape === "line") {
+        if (context) {
+          context.lineTo(offsetX, offsetY);
+          context.stroke();
+        }
+      } else {
+        drawTemporaryShape(
+          startPosition!.x,
+          startPosition!.y,
+          offsetX,
+          offsetY,
+        );
       }
     };
 
@@ -238,6 +260,36 @@ const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       }
 
       return "";
+    };
+
+    const drawTemporaryShape = (
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+    ) => {
+      const context = contextRef.current;
+      const canvas = canvasRef.current;
+
+      if (!context || !canvas) return;
+
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (savedDataRef.current) {
+        context.putImageData(savedDataRef.current, 0, 0);
+      }
+
+      if (shape === "star") {
+        drawStar(x1, y1, x2, y2);
+      } else if (shape === "polygon") {
+        drawPolygon(x1, y1, x2, y2, 5);
+      } else if (shape === "circle") {
+        drawCircle(x1, y1, x2, y2);
+      } else if (shape === "rectangle") {
+        drawRectangle(x1, y1, x2, y2);
+      }
+
+      context.strokeStyle = color;
     };
 
     const drawStar = (
