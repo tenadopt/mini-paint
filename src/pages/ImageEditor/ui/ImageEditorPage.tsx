@@ -59,7 +59,13 @@ const ImageEditorPage = memo(() => {
     useEffect(() => {
         const loadWork = async () => {
             if (!workId) {
+                setValue("title", "");
+                setValue("description", "");
+                setImageUrl("");
+                setLoadImage(false);
+                canvasEditorRef.current?.clearCanvas();
                 setLoading(false);
+
                 return;
             }
 
@@ -72,6 +78,7 @@ const ImageEditorPage = memo(() => {
                 if (!docSnap.exists()) {
                     toast.error("Work not found");
                     setLoading(false);
+
                     return;
                 }
 
@@ -80,6 +87,7 @@ const ImageEditorPage = memo(() => {
                 if (work.userId !== userId) {
                     toast.error("Work not found or you do not have access");
                     setLoading(false);
+                    
                     return;
                 }
 
@@ -106,15 +114,18 @@ const ImageEditorPage = memo(() => {
         try {
             if (canvasEditorRef.current) {
                 const imageUrl = await canvasEditorRef.current.saveCanvas();
+
                 data.imageUrl = imageUrl;
             }
 
             if (workId) {
                 const docRef: DocumentReference = doc(db, "works", workId);
+
                 await updateDoc(docRef, data);
                 toast.success("Work updated successfully");
             } else {
                 const worksCollection = collection(db, "works");
+
                 await addDoc(worksCollection, { ...data, userId });
                 toast.success("Work added successfully");
             }
